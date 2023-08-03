@@ -86,8 +86,11 @@ net.Receive("MVP_MapVotePoolsCancel", function()
 	end
 end)
 
-net.Receive("RTV_Delay", function()
-	chat.AddText(MapVotePools.COLORS.chat_highlight, "[RTV]", MapVotePools.COLORS.chat_text, " The vote has been rocked, map vote will begin on round end")
+net.Receive("MVP_RTV_Delay", function()
+	chat.AddText(MapVotePools.COLORS.chat_highlight, "[RTV]", MapVotePools.COLORS.chat_text, " The vote has been rocked, map vote will begin on round end.")
+end)
+net.Receive("MVP_UNRTV_Delay", function()
+	chat.AddText(MapVotePools.COLORS.chat_unhighlight, "[RTV]", MapVotePools.COLORS.chat_text, " The vote has been unrocked, map vote will no longer begin on round end." )
 end)
 
 
@@ -424,3 +427,17 @@ function PANEL:Flash(id)
 end
 
 derma.DefineControl("MVP_VoteScreen", "", PANEL, "DPanel")
+
+--[[
+concommand.Add("cl_mvp_genhelp", function()
+	local L = LANG.GetLanguageTableReference("en")
+	local out = "[table]\n[tr]\n\t[th]cvar[/th]\n\t[th]description[/th]\n[/tr]\n"
+	for key, _ in pairs(MapVotePools.CVARS) do
+		out = out .. "[tr]\n"
+		out = out .. "\t[td][b]" .. "sv_mvp_" .. key .. "[/b] [i]value[/i][/td]\n"
+		out = out .. "\t[td][b]" .. L["label_ttt2_sv_mvp_" .. key] .. ":[/b] " .. L["help_ttt2_sv_mvp_" .. key] .. "[/td]\n"
+		out = out .. "[/tr]\n"
+	end
+	print(out)
+end)
+]]

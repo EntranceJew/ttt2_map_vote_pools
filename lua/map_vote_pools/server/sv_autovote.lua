@@ -17,6 +17,10 @@ hook.Add( "Initialize", "AutoTTTMapVotePools", function()
 							switchmap = true
 						end
 						if switchmap then
+							timer.Stop("wait2prep")
+							timer.Stop("prep2begin")
+							-- the above two are for anti-blueballs, but,
+							-- do not seem to do anything when invoked in this timeframe
 							timer.Stop("end2prep")
 							MapVotePools.Start(nil, nil, nil, nil)
 						end

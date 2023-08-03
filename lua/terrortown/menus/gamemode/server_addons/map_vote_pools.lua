@@ -93,7 +93,7 @@ function go_go_gadget_extendo_dick:MakeTextEntry(data)
 
 	right.OnValueChanged = function(slf, value)
 		if isfunction(data.OnChange) then
-			print("ovc:", slf, value)
+			-- print("ovc:", slf, value)
 			data.OnChange(slf, value)
 		end
 	end
@@ -168,6 +168,41 @@ function CLGAMEMODESUBMENU:Populate(parent)
 	--     label = "help_ttt2_sv_psng_transparent_render_mode"
 	-- })
 
+	local rtv = vgui.CreateTTT2Form(parent, "map_vote_pools_settings_rtv")
+
+	rtv:MakeHelp({
+		label = "help_ttt2_sv_mvp_rtv_player_count",
+	})
+	rtv:MakeSlider({
+		label = "label_ttt2_sv_mvp_rtv_player_count",
+		serverConvar = "sv_mvp_rtv_player_count",
+		min = 0,
+		max = 128,
+		decimal = 0,
+	})
+
+	rtv:MakeHelp({
+		label = "help_ttt2_sv_mvp_rtv_ratio",
+	})
+	rtv:MakeSlider({
+		label = "label_ttt2_sv_mvp_rtv_ratio",
+		serverConvar = "sv_mvp_rtv_ratio",
+		min = 0,
+		max = 1,
+		decimal = 2,
+	})
+
+	rtv:MakeHelp({
+		label = "help_ttt2_sv_mvp_rtv_wait",
+	})
+	rtv:MakeSlider({
+		label = "label_ttt2_sv_mvp_rtv_wait",
+		serverConvar = "sv_mvp_rtv_wait",
+		min = 0,
+		max = 300,
+		decimal = 0,
+	})
+
 	local general = vgui.CreateTTT2Form(parent, "map_vote_pools_settings_general")
 
 	general:MakeHelp({
@@ -220,45 +255,12 @@ function CLGAMEMODESUBMENU:Populate(parent)
 	})
 
 	general:MakeHelp({
-		label = "help_ttt2_sv_mvp_rtv_player_count",
-	})
-	general:MakeSlider({
-		label = "label_ttt2_sv_mvp_rtv_player_count",
-		serverConvar = "sv_mvp_rtv_player_count",
-		min = 0,
-		max = 128,
-		decimal = 0,
-	})
-
-	general:MakeHelp({
-		label = "help_ttt2_sv_mvp_rtv_ratio",
-	})
-	general:MakeSlider({
-		label = "label_ttt2_sv_mvp_rtv_ratio",
-		serverConvar = "sv_mvp_rtv_ratio",
-		min = 0,
-		max = 1,
-		decimal = 2,
-	})
-
-	general:MakeHelp({
-		label = "help_ttt2_sv_mvp_rtv_wait",
-	})
-	general:MakeSlider({
-		label = "label_ttt2_sv_mvp_rtv_wait",
-		serverConvar = "sv_mvp_rtv_wait",
-		min = 0,
-		max = 300,
-		decimal = 0,
-	})
-
-	general:MakeHelp({
 		label = "help_ttt2_sv_mvp_map_prefixes",
 	})
 	general:MakeTextEntry({
 		label = "label_ttt2_sv_mvp_map_prefixes",
 		serverConvar = "sv_mvp_map_prefixes",
-		OnChange = function(...) print("g.mte.oc:", ...) end,
+		-- OnChange = function(...) print("g.mte.oc:", ...) end,
 	})
 
 	general:MakeHelp({

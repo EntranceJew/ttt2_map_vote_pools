@@ -36,6 +36,7 @@ MapVotePools.COLORS = {
 	final = Color( 100, 100, 100 ),
 
 	chat_highlight = Color( 102,255,51 ),
+	chat_unhighlight = Color( 255,102,51 ),
 	chat_text = Color( 255,255,255 ),
 
 	button = Color(0, 0, 0, 200),

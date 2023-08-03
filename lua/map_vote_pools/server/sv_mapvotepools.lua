@@ -65,21 +65,10 @@ util.AddNetworkString("MVP_MapVotePoolsStart")
 util.AddNetworkString("MVP_MapVotePoolsUpdate")
 util.AddNetworkString("MVP_MapVotePoolsCancel")
 util.AddNetworkString("MVP_RTV_Delay")
+util.AddNetworkString("MVP_UNRTV_Delay")
 util.AddNetworkString("MVP_AdminGetMapData")
 util.AddNetworkString("MVP_AdminReturnMapData")
 util.AddNetworkString("MVP_AdminWriteMapData")
-
-local MapVotePoolsConfigDefault = {
-	MapLimit = 24,
-	TimeLimit = 28,
-	AllowCurrentMap = false,
-	EnableCooldown = true,
-	MapsBeforeRevote = 3,
-	RTVPlayerCount = 3,
-	MapPrefixes = {"ttt_"},
-	AutoGamemode = false,
-	SkipSort = false
-}
 
 function MapVotePools.GetMapData(map_name)
 	local datum = {}
@@ -286,7 +275,6 @@ function MapVotePools.CollectMaps(length, current, limit, prefix, callback)
 		local delta_low  = 0
 		local delta_high = 0
 		local delta = 0
-		-- @TODO: make it so that the round defers
 		-- @TODO: implement tracking this stat
 		if map.stats.LifetimeSessionStarts <= 0 then
 			map.score = map.score + bonus.uninducted
@@ -319,6 +307,11 @@ function MapVotePools.CollectMaps(length, current, limit, prefix, callback)
 		if (limit and #vote_maps >= limit) then break end
 	end
 
+	-- @TODO: add handle nominations
+	return vote_maps
+end
+
+function MapVotePools.HandleNominations(scored_map_index, vote_map_index, vote_maps)
 	local nominations = {
 		"ttt_5am",
 		"ttt_avalanched",
@@ -364,9 +357,8 @@ function MapVotePools.CollectMaps(length, current, limit, prefix, callback)
 			)
 		end
 	end
-
-	return vote_maps
 end
+
 
 function MapVotePools.Cancel()
 	if MapVotePools.Allow then
@@ -384,14 +376,14 @@ function MapVotePools.Start(length, current, limit, prefix, callback)
 	local vote_maps = MapVotePools.CollectMaps(current, limit, prefix, callback)
 
 	local map_count = #vote_maps
-	print(map_count, "maps to choose from")
+	-- print(map_count, "maps to choose from")
 
 	-- PrintTable(vote_maps)
 	net.Start("MVP_MapVotePoolsStart")
 		net.WriteUInt(map_count, 32)
 
 		for i = 1, map_count do
-			print(i, "index")
+			-- print(i, "index")
 			local voted_map = vote_maps[i]
 
 			net.WriteString(voted_map.name)
@@ -406,6 +398,14 @@ function MapVotePools.Start(length, current, limit, prefix, callback)
 	MapVotePools.Allow = true
 	MapVotePools.CurrentMaps = vote_maps
 	MapVotePools.Votes = {}
+
+	-- FEATURE: Anti-BlueBalls
+	if GAMEMODE_NAME == "terrortown" then
+		timer.Stop("wait2prep")
+		timer.Stop("prep2begin")
+		timer.Stop("end2prep")
+		timer.Stop("winchecker")
+	end
 
 	timer.Create("MVP_MapVotePools", length, 1, function()
 		MapVotePools.Allow = false

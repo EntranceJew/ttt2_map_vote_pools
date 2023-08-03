@@ -61,7 +61,7 @@ function PANEL:Init()
 	self.TextArea:SetCursorColor(textColor)
 
 	self.TextArea.OnValueChange = function(slf,value)
-		print("ta.ovc:",slf,value)
+		-- print("ta.ovc:",slf,value)
 		self:SetValue(value)
 	end
 
@@ -113,7 +113,7 @@ end
 -- @param bool ignoreConVar To avoid endless loops, separated setting of convars and UI values
 -- @realm client
 function PANEL:SetValue(value, ignoreConVar)
-	print("p.sv:", self, value, self:GetValue())
+	-- print("p.sv:", self, value, self:GetValue())
 	if not value then return end
 
 	if value == self:GetValue() then return end
@@ -123,7 +123,7 @@ function PANEL:SetValue(value, ignoreConVar)
 	self:ValueChanged(value)
 
 	-- Set ConVars only when Mouse is released
-	if ignoreConVar --[[or self:IsEditing()]] then print("no convar, editing") return end
+	if ignoreConVar --[[or self:IsEditing()]] then --[[print("no convar, editing")]] return end
 
 	self:SetConVarValues(value)
 end
@@ -132,7 +132,7 @@ end
 -- @param any val
 -- @realm client
 function PANEL:SetConVarValues(value)
-	print("p.scvv:", self, value)
+	-- print("p.scvv:", self, value)
 	if self.conVar then
 		self.conVar:SetString(value)
 	end
@@ -211,7 +211,7 @@ function PANEL:SetServerConVar(cvar)
 	self.serverConVar = cvar
 
 	cvars.ServerConVarGetValue(cvar, function (wasSuccess, value, default)
-		print(wasSuccess, value, default)
+		-- print(wasSuccess, value, default)
 		if wasSuccess then
 			self:SetValue(tostring(value), true)
 			self:SetDefaultValue(tostring(default))
@@ -257,7 +257,7 @@ end
 -- @param any val
 -- @realm client
 function PANEL:ValueChanged(val)
-	print("p.vc:", self, val)
+	-- print("p.vc:", self, val)
 	if self.TextArea ~= vgui.GetKeyboardFocus() then
 		self.TextArea:SetText(val)
 	end
