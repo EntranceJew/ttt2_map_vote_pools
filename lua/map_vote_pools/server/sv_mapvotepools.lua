@@ -44,6 +44,26 @@ MapVotePools.CVARS = MapVotePools.CVARS or {
 		"ttt_",
 		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
 	),
+	map_whitelist_enabled = CreateConVar(
+		"sv_mvp_map_whitelist_enabled",
+		"0",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	map_whitelist = CreateConVar(
+		"sv_mvp_map_whitelist",
+		"",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	map_blacklist_enabled = CreateConVar(
+		"sv_mvp_map_blacklist_enabled",
+		"0",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	map_blacklist = CreateConVar(
+		"sv_mvp_map_blacklist",
+		"",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
 	auto_gamemode = CreateConVar(
 		"sv_mvp_auto_gamemode",
 		"0",
@@ -246,12 +266,17 @@ function MapVotePools.CollectMaps(length, current, limit, prefix, callback)
 
 	local scored_maps = {}
 	local scored_map_index = {}
+	local whitelist = string.Split(MapVotePools.CVARS.map_whitelist:GetString(), "|")
+	local blacklist = string.Split(MapVotePools.CVARS.map_blacklist:GetString(), "|")
 	for _, map_path in RandomPairs(maps) do
 		local map = MapVotePools.GetMapData(map_path)
 		map.score = 0
 
 		-- eliminate via filtering foremost
 		if (not current and this_map.name == map.name) then continue end
+		if (cooldown and table.HasValue(MapVotePools.Data.RecentMaps, map.name)) then continue end
+		if MapVotePools.CVARS.map_blacklist_enabled:GetBool() and table.HasValue(blacklist, map.name) then continue end
+		if MapVotePools.CVARS.map_whitelist_enabled:GetBool() and not table.HasValue(whitelist, map.name) then continue end
 		if is_expression and not string.find(map.name, prefix) then
 			continue
 		else
@@ -263,7 +288,7 @@ function MapVotePools.CollectMaps(length, current, limit, prefix, callback)
 			end
 			if not found then continue end
 		end
-		if (cooldown and table.HasValue(MapVotePools.Data.RecentMaps, map.name)) then continue end
+		
 		-- if (MapVotePools.MapData[map] and MapVotePools.MapData[map].SpawnPoints > 0) then continue end
 
 		-- @TODO: delete, debug only

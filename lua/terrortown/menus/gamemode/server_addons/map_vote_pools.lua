@@ -264,6 +264,36 @@ function CLGAMEMODESUBMENU:Populate(parent)
 	})
 
 	general:MakeHelp({
+		label = "help_ttt2_sv_mvp_map_whitelist_enabled",
+	})
+	general:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_map_whitelist_enabled",
+		serverConvar = "sv_mvp_map_whitelist_enabled"
+	})
+	general:MakeHelp({
+		label = "help_ttt2_sv_mvp_map_whitelist",
+	})
+	general:MakeTextEntry({
+		label = "label_ttt2_sv_mvp_map_whitelist",
+		serverConvar = "sv_mvp_map_whitelist",
+	})
+
+	general:MakeHelp({
+		label = "help_ttt2_sv_mvp_map_blacklist_enabled",
+	})
+	general:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_map_blacklist_enabled",
+		serverConvar = "sv_mvp_map_blacklist_enabled"
+	})
+	general:MakeHelp({
+		label = "help_ttt2_sv_mvp_map_blacklist",
+	})
+	general:MakeTextEntry({
+		label = "label_ttt2_sv_mvp_map_blacklist",
+		serverConvar = "sv_mvp_map_blacklist",
+	})
+
+	general:MakeHelp({
 		label = "help_ttt2_sv_mvp_auto_gamemode",
 	})
 	general:MakeCheckBox({

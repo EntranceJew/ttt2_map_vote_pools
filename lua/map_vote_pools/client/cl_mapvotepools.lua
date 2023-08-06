@@ -432,12 +432,13 @@ derma.DefineControl("MVP_VoteScreen", "", PANEL, "DPanel")
 concommand.Add("cl_mvp_genhelp", function()
 	local L = LANG.GetLanguageTableReference("en")
 	local out = "[table]\n[tr]\n\t[th]cvar[/th]\n\t[th]description[/th]\n[/tr]\n"
-	for key, _ in pairs(MapVotePools.CVARS) do
+	for key, _ in pairs(ExtraLootableProps.CVARS) do
 		out = out .. "[tr]\n"
-		out = out .. "\t[td][b]" .. "sv_mvp_" .. key .. "[/b] [i]value[/i][/td]\n"
-		out = out .. "\t[td][b]" .. L["label_ttt2_sv_mvp_" .. key] .. ":[/b] " .. L["help_ttt2_sv_mvp_" .. key] .. "[/td]\n"
+		out = out .. "\t[td][b]" .. "sv_elp_" .. key .. "[/b] [i]value[/i][/td]\n"
+		out = out .. "\t[td][b]" .. L["label_ttt2_sv_elp_" .. key] .. ":[/b] " .. L["help_ttt2_sv_elp_" .. key] .. "[/td]\n"
 		out = out .. "[/tr]\n"
 	end
+	out = out .. "[/table]\n"
 	print(out)
 end)
 ]]
