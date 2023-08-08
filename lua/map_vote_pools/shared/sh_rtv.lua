@@ -42,8 +42,6 @@ function MapVotePools.RTV.VoteWillPass()
 	return cond
 end
 
-
-
 function MapVotePools.RTV.ProcessVotes()
 	local was = MapVotePools.RTV._VoteWillPass
 	local now = MapVotePools.RTV.VoteWillPass()
