@@ -46,5 +46,12 @@ L["help_ttt2_sv_mvp_map_blacklist"] = "The names of maps to deny, verbatim.\nSep
 L["label_ttt2_sv_mvp_skip_sort"] = "Skip Sort"
 L["help_ttt2_sv_mvp_skip_sort"] = "Stay random. Do not attempt to sort maps based on player availability scores."
 
+L["map_vote_pools_settings_interface"] = "Interface"
+
+L["label_ttt2_sv_mvp_use_ulx_commands"] = "Use ULX Commands"
+L["help_ttt2_sv_mvp_use_ulx_commands"] = "Whether to register short commands likely to collide in ULX's menus.\nDisable this and use chat for less compatibility but easier invocation."
+L["label_ttt2_sv_mvp_use_chat_commands"] = "Use chat Commands"
+L["help_ttt2_sv_mvp_use_chat_commands"] = "Whether to register plain-text chat listeners.\nDisable this and use ULX for greater compatability with chat widgets."
+
 -- L["label_ttt2_sv_mvp_"] = ""
 -- L["help_ttt2_sv_mvp_"] = ""

@@ -60,7 +60,7 @@ net.Receive("MVP_AdminWriteMapData", function(len, ply)
 end)
 
 net.Receive("MVP_MapVotePoolsUpdate", function(len, ply)
-	if (MapVotePools.Allow and IsValid(ply)) then
+	if (MapVotePools.InProgress and IsValid(ply)) then
 		local update_type = net.ReadUInt(3)
 
 		if (update_type == MapVotePools.UPDATE_VOTE) then
@@ -205,7 +205,7 @@ function MapVotePools.CollectMaps(length, current, limit, prefix, callback)
 			end
 			if not found then continue end
 		end
-		
+
 		-- if (MapVotePools.MapData[map] and MapVotePools.MapData[map].SpawnPoints > 0) then continue end
 
 		-- @TODO: delete, debug only
@@ -303,8 +303,8 @@ end
 
 
 function MapVotePools.Cancel()
-	if MapVotePools.Allow then
-		MapVotePools.Allow = false
+	if MapVotePools.InProgress then
+		MapVotePools.InProgress = false
 
 		net.Start("MVP_MapVotePoolsCancel")
 		net.Broadcast()
@@ -337,7 +337,7 @@ function MapVotePools.Start(length, current, limit, prefix, callback)
 		net.WriteUInt(length, 32)
 	net.Broadcast()
 
-	MapVotePools.Allow = true
+	MapVotePools.InProgress = true
 	MapVotePools.CurrentMaps = vote_maps
 	MapVotePools.Votes = {}
 
@@ -350,7 +350,7 @@ function MapVotePools.Start(length, current, limit, prefix, callback)
 	end
 
 	timer.Create("MVP_MapVotePools", length, 1, function()
-		MapVotePools.Allow = false
+		MapVotePools.InProgress = false
 		local map_results = {}
 
 		for k, v in pairs(MapVotePools.Votes) do

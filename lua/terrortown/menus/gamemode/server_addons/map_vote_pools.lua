@@ -308,4 +308,21 @@ function CLGAMEMODESUBMENU:Populate(parent)
 		label = "label_ttt2_sv_mvp_skip_sort",
 		serverConvar = "sv_mvp_skip_sort"
 	})
+
+	local interface = vgui.CreateTTT2Form(parent, "map_vote_pools_settings_interface")
+	interface:MakeHelp({
+		label = "help_ttt2_sv_mvp_use_chat_commands",
+	})
+	interface:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_use_chat_commands",
+		serverConvar = "sv_mvp_use_chat_commands"
+	})
+
+	interface:MakeHelp({
+		label = "help_ttt2_sv_mvp_use_ulx_commands",
+	})
+	interface:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_use_ulx_commands",
+		serverConvar = "sv_mvp_use_ulx_commands"
+	})
 end

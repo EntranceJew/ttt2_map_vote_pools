@@ -1,4 +1,3 @@
-
 local SKIN = derma.GetNamedSkin("ttt2_default")
 
 function SKIN:PaintTextAreaTTT2(panel, w, h)

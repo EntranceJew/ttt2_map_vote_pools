@@ -102,6 +102,16 @@ MapVotePools.CVARS = MapVotePools.CVARS or {
 		"0",
 		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
 	),
+	use_ulx_commands = CreateConVar(
+		"sv_mvp_use_ulx_commands",
+		"0",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	use_chat_commands = CreateConVar(
+		"sv_mvp_use_chat_commands",
+		"1",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
 	-- debug_print = CreateConVar(
 	--     "sv_psng_debug_print",
 	--     "0",
@@ -146,6 +156,21 @@ MapVotePools.Utils.ColorSlerp = function(from,to,transition)
 	return out
 end
 
+local RTV = RTV or {}
+
+MapVotePools.RTV = RTV
+
+MapVotePools.RTV.RequestRockingChatCommands = {
+	"!rtv",
+	"/rtv",
+	"rtv"
+}
+
+MapVotePools.RTV.UnrequestRockingChatCommands = {
+	"!unrtv",
+	"/unrtv",
+	"unrtv"
+}
 
 function MapVotePools.HasExtraVotePower(ply)
 	return false
@@ -154,14 +179,13 @@ end
 if SERVER then
 	AddCSLuaFile()
 	AddCSLuaFile("map_vote_pools/client/cl_mapvotepools.lua")
-	AddCSLuaFile("map_vote_pools/shared/sh_rtv.lua")
+	AddCSLuaFile("map_vote_pools/client/cl_rtv.lua")
 	AddCSLuaFile("map_vote_pools/shared/sh_dtextentry_ttt2.lua")
 
 	include("map_vote_pools/server/sv_mapvotepools.lua")
 	include("map_vote_pools/server/sv_autovote.lua")
-	include("map_vote_pools/shared/sh_rtv.lua")
+	include("map_vote_pools/server/sv_rtv.lua")
 else
 	include("map_vote_pools/client/cl_mapvotepools.lua")
-	include("map_vote_pools/shared/sh_rtv.lua")
-	-- include("map_vote_pools/shared/sh_dtextentry_ttt2.lua")
+	include("map_vote_pools/client/cl_rtv.lua")
 end
