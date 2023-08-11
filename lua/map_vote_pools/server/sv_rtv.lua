@@ -17,7 +17,7 @@ function MapVotePools.RTV.TotalRockingRequests()
 end
 
 function MapVotePools.RTV.GetRockingGoal()
-	return math.min(1,math.Round(player.GetCount() * MapVotePools.CVARS.rtv_ratio:GetFloat() ))
+	return math.max(1,math.Round(player.GetCount() * MapVotePools.CVARS.rtv_ratio:GetFloat() ))
 end
 
 function MapVotePools.RTV.WillBeRocked()
