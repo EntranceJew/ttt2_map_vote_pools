@@ -9,111 +9,6 @@ local WriteMapData = function(wad)
 	net.SendToServer()
 end
 
-include("map_vote_pools/shared/sh_dtextentry_ttt2.lua")
-
-local go_go_gadget_extendo_dick = vgui.GetControlTable("DFormTTT2")
-if not go_go_gadget_extendo_dick then return end
-
-local function MakeReset(parent)
-	local reset = vgui.Create("DButtonTTT2", parent)
-
-	reset:SetText("button_default")
-	reset:SetSize(32, 32)
-
-	reset.Paint = function(slf, w, h)
-		derma.SkinHook("Paint", "FormButtonIconTTT2", slf, w, h)
-
-		return true
-	end
-
-	reset.material = Material("vgui/ttt/vskin/icon_reset")
-
-	return reset
-end
-
-local function getHighestParent(slf)
-	local parent = slf
-	local checkParent = slf:GetParent()
-
-	while ispanel(checkParent) do
-		parent = checkParent
-		checkParent = parent:GetParent()
-	end
-
-	return parent
-end
-
----
--- Adds a slider to the form
--- @param table data The data for the slider
--- @return Panel The created slider
--- @realm client
-function go_go_gadget_extendo_dick:MakeTextEntry(data)
-	local left = vgui.Create("DLabelTTT2", self)
-
-	left:SetText(data.label)
-
-	left.Paint = function(slf, w, h)
-		derma.SkinHook("Paint", "FormLabelTTT2", slf, w, h)
-
-		return true
-	end
-
-	local right = vgui.Create("DTextEntryTTT2", self)
-
-	local reset = MakeReset(self)
-	right:SetResetButton(reset)
-
-	right:SetUpdateOnType(false)
-	right:SetHeightMult(1)
-
-	right.OnGetFocus = function(slf)
-		getHighestParent(self):SetKeyboardInputEnabled(true)
-	end
-
-	right.OnLoseFocus = function(slf)
-		getHighestParent(self):SetKeyboardInputEnabled(false)
-	end
-
-
-
-	right:SetPlaceholderText("")
-	right:SetCurrentPlaceholderText("")
-
-	-- Set default if possible even if the convar could still overwrite it
-	right:SetDefaultValue(data.default)
-	right:SetConVar(data.convar)
-	right:SetServerConVar(data.serverConvar)
-	-- right:SizeToContents()
-	-- right:PerformLayout()
-
-	if not data.convar and not data.serverConvar and data.initial then
-		right:SetValue(data.initial)
-	end
-
-	right.OnValueChanged = function(slf, value)
-		if isfunction(data.OnChange) then
-			-- print("ovc:", slf, value)
-			data.OnChange(slf, value)
-		end
-	end
-
-	right:SetTall(32)
-	right:Dock(TOP)
-
-
-	self:AddItem(left, right, reset)
-
-	if IsValid(data.master) and isfunction(data.master.AddSlave) then
-		data.master:AddSlave(left)
-		data.master:AddSlave(right)
-		data.master:AddSlave(reset)
-	end
-
-	return left
-end
-
-
 function CLGAMEMODESUBMENU:Populate(parent)
 	net.Receive("MVP_AdminReturnMapData", function(len, ply)
 		local map_name = net.ReadString()
@@ -157,7 +52,7 @@ function CLGAMEMODESUBMENU:Populate(parent)
 		})
 	end)
 
-	net.Start("MVP_AdminGetMapData")
+	net.Start("MVP_AdminRequestMapData")
 	net.SendToServer()
 
 	-- possession:MakeCheckBox({
@@ -200,6 +95,19 @@ function CLGAMEMODESUBMENU:Populate(parent)
 		serverConvar = "sv_mvp_rtv_wait",
 		min = 0,
 		max = 300,
+		decimal = 0,
+	})
+
+	local nominate = vgui.CreateTTT2Form(parent, "map_vote_pools_settings_nominate")
+
+	nominate:MakeHelp({
+		label = "help_ttt2_sv_mvp_nominate_limit_map_print",
+	})
+	nominate:MakeSlider({
+		label = "label_ttt2_sv_mvp_nominate_limit_map_print",
+		serverConvar = "sv_mvp_nominate_limit_map_print",
+		min = 0,
+		max = 32,
 		decimal = 0,
 	})
 

@@ -1,3 +1,4 @@
+---@diagnostic disable: missing-parameter
 MapVotePools = MapVotePools or {}
 MapVotePools.UPDATE_VOTE = 1
 MapVotePools.UPDATE_WIN = 3
@@ -24,9 +25,32 @@ MapVotePools.CVAR.WEIGHT_BONUSES = {
 	uninducted = 500,
 	map_too_big = -200,
 	insufficient_spawns = -100,
+	nomination_value = 1000,
 }
 
 MapVotePools.CVARS = MapVotePools.CVARS or {
+	rtv_player_count = CreateConVar(
+		"sv_mvp_rtv_player_count",
+		"3",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	rtv_ratio = CreateConVar(
+		"sv_mvp_rtv_ratio",
+		"0.66",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	rtv_wait = CreateConVar(
+		"sv_mvp_rtv_wait",
+		"60",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+
+	nominate_limit_map_print = CreateConVar(
+		"sv_mvp_nominate_limit_map_print",
+		"32",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+
 	map_limit = CreateConVar(
 		"sv_mvp_map_limit",
 		"24",
@@ -50,21 +74,6 @@ MapVotePools.CVARS = MapVotePools.CVARS or {
 	maps_before_revote = CreateConVar(
 		"sv_mvp_maps_before_revote",
 		"3",
-		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
-	),
-	rtv_player_count = CreateConVar(
-		"sv_mvp_rtv_player_count",
-		"3",
-		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
-	),
-	rtv_ratio = CreateConVar(
-		"sv_mvp_rtv_ratio",
-		"0.66",
-		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
-	),
-	rtv_wait = CreateConVar(
-		"sv_mvp_rtv_wait",
-		"60",
 		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
 	),
 	map_prefixes = CreateConVar(
@@ -172,6 +181,19 @@ MapVotePools.RTV.UnrequestRockingChatCommands = {
 	"unrtv"
 }
 
+MapVotePools.Nominate = MapVotePools.Nominate or {}
+MapVotePools.Nominate.NominateMapChatCommands = {
+	"!nominate",
+	"/nominate",
+	"nominate"
+}
+
+MapVotePools.Nominate.UnnominateMapChatCommands = {
+	"!unnominate",
+	"/unnominate",
+	"unnominate"
+}
+
 function MapVotePools.HasExtraVotePower(ply)
 	return false
 end
@@ -179,13 +201,15 @@ end
 if SERVER then
 	AddCSLuaFile()
 	AddCSLuaFile("map_vote_pools/client/cl_mapvotepools.lua")
+	AddCSLuaFile("map_vote_pools/client/cl_nominate.lua")
 	AddCSLuaFile("map_vote_pools/client/cl_rtv.lua")
-	AddCSLuaFile("map_vote_pools/shared/sh_dtextentry_ttt2.lua")
 
 	include("map_vote_pools/server/sv_mapvotepools.lua")
 	include("map_vote_pools/server/sv_autovote.lua")
+	include("map_vote_pools/server/sv_nominate.lua")
 	include("map_vote_pools/server/sv_rtv.lua")
 else
 	include("map_vote_pools/client/cl_mapvotepools.lua")
+	include("map_vote_pools/client/cl_nominate.lua")
 	include("map_vote_pools/client/cl_rtv.lua")
 end

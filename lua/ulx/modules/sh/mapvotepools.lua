@@ -43,12 +43,41 @@ if MapVotePools.CVARS.use_ulx_commands:GetBool() then
 		end
 	end
 
-	local requestrockingcmd = ulx.command( CATEGORY_NAME, "ulx rtv", MVP_requestrocking, "!rtv" )
+	local requestrockingcmd = ulx.command( CATEGORY_NAME, "ulx rtv", MVP_requestrocking, "!rtv", true )
+	requestrockingcmd.hide = true
 	requestrockingcmd:addParam({
 		type = ULib.cmds.BoolArg,
 		invisible = true
 	})
 	requestrockingcmd:defaultAccess( ULib.ACCESS_ALL )
 	requestrockingcmd:help( "Request to rock the vote, and begin a vote for changing the map at the end of the round." )
-	requestrockingcmd:setOpposite( "ulx unrtv", {_, true}, "!unrtv" )
+	requestrockingcmd:setOpposite( "ulx unrtv", {_, true}, "!unrtv", true )
+
+	local function MVP_nominatemap( calling_ply, map_name, should_cancel )
+		local succ = false
+		if not should_cancel then
+			if SERVER then
+				succ = MapVotePools.Nominate.HandleClientNominateMap(calling_ply, map_name)
+			end
+			if succ then ulx.fancyLogAdmin( calling_ply, "#A nominated a map!" ) end
+		else
+			if SERVER then
+				succ = MapVotePools.Nominate.HandleClientNominateMap(calling_ply, nil)
+			end
+			if succ then ulx.fancyLogAdmin( calling_ply, "#A unnominated their map." ) end
+		end
+	end
+
+	local nominatemapcmd = ulx.command( CATEGORY_NAME, "ulx nominate", MVP_nominatemap, "!nominate", true )
+	nominatemapcmd.hide = true
+	nominatemapcmd:addParam({
+		type = ULib.cmds.StringArg,
+	})
+	nominatemapcmd:addParam({
+		type = ULib.cmds.BoolArg,
+		invisible = true
+	})
+	nominatemapcmd:defaultAccess( ULib.ACCESS_ALL )
+	nominatemapcmd:help( "Nominate a map name to appear on the next map vote ballot." )
+	nominatemapcmd:setOpposite( "ulx unnominate", {_, "", true}, "!unnominate", true )
 end

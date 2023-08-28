@@ -19,6 +19,11 @@ L["help_ttt2_sv_mvp_rtv_wait"] = "The time one must wait before they may RTV on 
 L["label_ttt2_sv_mvp_rtv_player_count"] = "RTV Player Count"
 L["help_ttt2_sv_mvp_rtv_player_count"] = "The minimum number of players necessary for RTV."
 
+L["map_vote_pools_settings_nominate"] = "Nominate"
+
+L["label_ttt2_sv_mvp_nominate_limit_map_print"] = "Limit Map Print"
+L["help_ttt2_sv_mvp_nominate_limit_map_print"] = "The max amount of maps to print when a user does an incomplete nomination."
+
 L["map_vote_pools_settings_general"] = "General"
 
 L["label_ttt2_sv_mvp_map_limit"] = "Map Limit"

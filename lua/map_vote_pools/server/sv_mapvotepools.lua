@@ -3,18 +3,22 @@ util.AddNetworkString("MVP_MapVotePoolsUpdate")
 util.AddNetworkString("MVP_MapVotePoolsCancel")
 util.AddNetworkString("MVP_RTV_Delay")
 util.AddNetworkString("MVP_UNRTV_Delay")
-util.AddNetworkString("MVP_AdminGetMapData")
+util.AddNetworkString("MVP_AdminRequestMapData")
 util.AddNetworkString("MVP_AdminReturnMapData")
 util.AddNetworkString("MVP_AdminWriteMapData")
 
-function MapVotePools.GetMapData(map_name)
-	local datum = {}
-
+function MapVotePools.NormalizeMapName(map_name)
 	if string.EndsWith(map_name, ".bsp") then
 		map_name = map_name:sub(1, -5)
 	end
 
-	datum.name = map_name:lower()
+	return map_name:lower()
+end
+
+function MapVotePools.GetMapData(map_name)
+	local datum = {}
+
+	datum.name = MapVotePools.NormalizeMapName(map_name)
 	datum.stats = MapVotePools.Data.MapStats[map_name] or {
 		SpawnPoints = 0,
 
@@ -37,7 +41,7 @@ function MapVotePools.WriteData()
 	file.Write("mapvotepools/recentmaps.txt", util.TableToJSON(MapVotePools.Data.RecentMaps, true))
 end
 
-net.Receive("MVP_AdminGetMapData", function(len, ply)
+net.Receive("MVP_AdminRequestMapData", function(len, ply)
 	local map_data = MapVotePools.GetMapData(game.GetMap())
 	net.Start("MVP_AdminReturnMapData")
 		net.WriteString(map_data.name)
@@ -141,14 +145,8 @@ function MapVotePools.CoolDownDoStuff()
 	MapVotePools.WriteData()
 end
 
-function MapVotePools.CollectMaps(length, current, limit, prefix, callback)
-	current = current or MapVotePools.CVARS.allow_current_map:GetBool()
-	limit = limit or MapVotePools.CVARS.map_limit:GetInt()
+function MapVotePools.PlainMapList(prefix)
 	prefix = prefix or MapVotePools.CVARS.map_prefixes:GetString()
-
-	cooldown = MapVotePools.CVARS.enable_cooldown:GetBool()
-	autoGamemode = autoGamemode or MapVotePools.CVARS.auto_gamemode:GetBool()
-
 	local is_expression = false
 
 	if not prefix then
@@ -167,8 +165,47 @@ function MapVotePools.CollectMaps(length, current, limit, prefix, callback)
 			prefix = string.Split(prefix, "|")
 		end
 	end
+	local whitelist = string.Split(MapVotePools.CVARS.map_whitelist:GetString(), "|")
+	local blacklist = string.Split(MapVotePools.CVARS.map_blacklist:GetString(), "|")
 
 	local maps = file.Find("maps/*.bsp", "GAME")
+	-- table.sort( maps ) -- there's really no reason to sort this right here but it brings me peace
+
+	local plain_maps = {}
+	for _, map_path in pairs(maps) do
+		local map_name = MapVotePools.NormalizeMapName(map_path)
+
+		-- eliminate via strict filtering, this determines the effective map pool
+		if MapVotePools.CVARS.map_blacklist_enabled:GetBool() and table.HasValue(blacklist, map_name) then continue end
+		if MapVotePools.CVARS.map_whitelist_enabled:GetBool() and not table.HasValue(whitelist, map_name) then continue end
+		if is_expression and not string.find(map_name, prefix) then
+			continue
+		else
+			local found = false
+			for _, v in pairs(prefix) do
+				if string.find(map_name, "^" .. v) then
+					found = true
+				end
+			end
+			if not found then continue end
+		end
+
+		-- map wasn't filtered, we are good
+		table.insert(plain_maps, map_name)
+	end
+	table.sort( plain_maps )
+
+	return plain_maps
+end
+
+function MapVotePools.CollectMaps(prefix, current, limit)
+	current = current or MapVotePools.CVARS.allow_current_map:GetBool()
+	limit = limit or MapVotePools.CVARS.map_limit:GetInt()
+
+	local cooldown = MapVotePools.CVARS.enable_cooldown:GetBool()
+	local autoGamemode = autoGamemode or MapVotePools.CVARS.auto_gamemode:GetBool()
+
+	local maps = MapVotePools.PlainMapList(prefix)
 
 	local this_map = MapVotePools.GetMapData( game.GetMap() )
 	-- local spawns = plyspawn.GetPlayerSpawnPoints()
@@ -183,29 +220,14 @@ function MapVotePools.CollectMaps(length, current, limit, prefix, callback)
 
 	local scored_maps = {}
 	local scored_map_index = {}
-	local whitelist = string.Split(MapVotePools.CVARS.map_whitelist:GetString(), "|")
-	local blacklist = string.Split(MapVotePools.CVARS.map_blacklist:GetString(), "|")
+
 	for _, map_path in RandomPairs(maps) do
 		local map = MapVotePools.GetMapData(map_path)
 		map.score = 0
 
-		-- eliminate via filtering foremost
+		-- eliminate via temporal preferences
 		if (not current and this_map.name == map.name) then continue end
 		if (cooldown and table.HasValue(MapVotePools.Data.RecentMaps, map.name)) then continue end
-		if MapVotePools.CVARS.map_blacklist_enabled:GetBool() and table.HasValue(blacklist, map.name) then continue end
-		if MapVotePools.CVARS.map_whitelist_enabled:GetBool() and not table.HasValue(whitelist, map.name) then continue end
-		if is_expression and not string.find(map.name, prefix) then
-			continue
-		else
-			local found = false
-			for _, v in pairs(prefix) do
-				if string.find(map.name, "^" .. v) then
-					found = true
-				end
-			end
-			if not found then continue end
-		end
-
 		-- if (MapVotePools.MapData[map] and MapVotePools.MapData[map].SpawnPoints > 0) then continue end
 
 		-- @TODO: delete, debug only
@@ -229,46 +251,53 @@ function MapVotePools.CollectMaps(length, current, limit, prefix, callback)
 			end
 			delta = math.max(delta_low, delta_high)
 
-			score = score + (bonus.map_too_big * delta_low)
-			score = score + (bonus.insufficient_spawns * delta_high)
+			map.score = map.score + (bonus.map_too_big * delta_low)
+			map.score = map.score + (bonus.insufficient_spawns * delta_high)
+		end
+
+		-- nomination bonus
+		if MapVotePools.Nominate.MapNominationCounts[ map.name ] then
+			map.score = map.score + (bonus.nomination_value * MapVotePools.Nominate.MapNominationCounts[ map.name ])
 		end
 
 		scored_map_index[map.name] = map
 		table.insert(scored_maps, map)
 	end
 
-	if not MapVotePools.CVARS.skip_sort:GetBool() then
-		table.sort( scored_maps, function(a, b) return a.score > b.score end )
-	end
-
 	local vote_maps = {}
 	local vote_map_index = {}
+
+	if not MapVotePools.CVARS.skip_sort:GetBool() then
+		table.sort( scored_maps, function(a, b) return a.score > b.score end )
+	else
+		-- we only need to override the maps if there is no nomination bonus score
+		MapVotePools.HandleNominationsOverrides(scored_map_index, vote_maps, vote_map_index, limit)
+	end
+
 	for _, map in pairs(scored_maps) do
+		-- if the nomination step already got to this map, skip it
+		if vote_map_index[map.name] then continue end
 		vote_maps[#vote_maps + 1] = map
 		vote_map_index[map.name] = true
 		if (limit and #vote_maps >= limit) then break end
 	end
 
-	-- @TODO: add handle nominations
 	return vote_maps
 end
 
-function MapVotePools.HandleNominations(scored_map_index, vote_map_index, vote_maps)
-	local nominations = {
-		"ttt_5am",
-		"ttt_avalanched",
-		"ttt_groverhaus",
-		"ttt_islandstreets",
-		"ttt_liesinthehighrise",
-		"ttt_paper_map",
-		"ttt_the_cubes",
-		"ttt_themed_rooms",
-		"ttt_woodtown",
-		"ttt_terrorception",
-		"stinky_map_that_is_not_real",
-	}
-	table.Shuffle(nominations)
+function MapVotePools.HandleNominationsOverrides(scored_map_index, vote_maps, vote_map_index, limit)
+	local _, nominations = MapVotePools.Nominate.TotalNominations()
 
+	-- ensure the ones with the most suggestions get priority
+	local sorted_nominations = table.SortByKey(nominations)
+	for _, nomination_name in ipairs(sorted_nominations) do
+		vote_maps[#vote_maps + 1] = scored_map_index[nomination_name]
+		vote_map_index[nomination_name] = true
+		if (limit and #vote_maps >= limit) then break end
+	end
+
+	-- literally what was i smoking
+	--[[
 	local i = 1
 	for _, nominated_map in pairs(nominations) do
 		if scored_map_index[nominated_map] then
@@ -299,8 +328,8 @@ function MapVotePools.HandleNominations(scored_map_index, vote_map_index, vote_m
 			)
 		end
 	end
+	]]
 end
-
 
 function MapVotePools.Cancel()
 	if MapVotePools.InProgress then
@@ -315,7 +344,7 @@ end
 
 function MapVotePools.Start(length, current, limit, prefix, callback)
 	length = length or MapVotePools.CVARS.time_limit:GetInt()
-	local vote_maps = MapVotePools.CollectMaps(current, limit, prefix, callback)
+	local vote_maps = MapVotePools.CollectMaps(prefix, current, limit)
 
 	local map_count = #vote_maps
 	-- print(map_count, "maps to choose from")

@@ -204,12 +204,12 @@ util.AddNetworkString("MVP_ClientUnrequestRocking")
 
 net.Receive( "MVP_ClientRequestRocking", function (len, ply)
 	MapVotePools.RTV.HandleClientRockingRequest(ply, true)
-	print("rtv")
+	-- print("rtv")
 end )
 
 net.Receive( "MVP_ClientUnrequestRocking", function (len, ply)
 	MapVotePools.RTV.HandleClientRockingRequest(ply, false)
-	print("unrtv")
+	-- print("unrtv")
 end )
 --endregion network
 
