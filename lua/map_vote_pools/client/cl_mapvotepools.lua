@@ -1,14 +1,60 @@
-surface.CreateFont("MVP_VoteFont", {
-	font = "Trebuchet MS",
-	size = 19,
+surface.CreateFont("MVP_VoteSysButton", {
+	font = "Marlett",
+	size = 13,
+	weight = 0,
+	symbol = true,
+})
+
+local look = {
+	countdown_reveal_duration = 0.9,
+	countdown_text_size = 32,
+	countdown_vertifcal_pos = 14,
+
+	playercount_text_size = 24,
+	playercount_vertical_pos = 8,
+
+	avatar_size = 32,
+	avatar_outline_size = 2,
+	avatar_move_duration = 0.3,
+
+	ballot_header_button_width = 31,
+
+	panel_use_image = true,
+	panel_size = 256,
+	panel_spacing = 4,
+	panel_padding = 4,
+	panel_reveal_duration = 0.9,
+	panel_reveal_rate = 0.025,
+	panel_discourage_alpha_ramp = 0.2,
+
+	color_alpha = 64,
+	render_bar_alpha = 128,
+	render_bar_edge_rounding = 0, -- was 4
+
+	text_pad = 6,
+	text_height = 24,
+	text_inset = 16,
+
+	flash_count = 3,
+	flash_interval = 0.2,
+
+	canvas_header_size = 100,
+	canvas_width = 640,
+
+	view_tile_col = 4,
+}
+
+surface.CreateFont("MVP_VoteFontCountdown", {
+	font = "Tahoma",
+	size = look.countdown_text_size,
 	weight = 700,
 	antialias = true,
 	shadow = true
 })
 
-surface.CreateFont("MVP_VoteFontCountdown", {
-	font = "Tahoma",
-	size = 32,
+surface.CreateFont("MVP_VoteFont", {
+	font = "Trebuchet MS",
+	size = look.text_height,
 	weight = 700,
 	antialias = true,
 	shadow = true
@@ -16,17 +62,10 @@ surface.CreateFont("MVP_VoteFontCountdown", {
 
 surface.CreateFont("MVP_VoteFontPlayercount", {
 	font = "Tahoma",
-	size = 24,
+	size = look.playercount_text_size,
 	weight = 700,
 	antialias = true,
 	shadow = true
-})
-
-surface.CreateFont("MVP_VoteSysButton", {
-	font = "Marlett",
-	size = 13,
-	weight = 0,
-	symbol = true,
 })
 
 net.Receive("MVP_MapVotePoolsStart", function()
@@ -86,6 +125,19 @@ net.Receive("MVP_MapVotePoolsCancel", function()
 	end
 end)
 
+MapVotePools.OpenBallot = function()
+	if IsValid(MapVotePools.Panel) then
+		MapVotePools.Panel:SetVisible(true)
+	else
+		chat.AddText(MapVotePools.COLORS.chat_highlight, "[MVP]", MapVotePools.COLORS.chat_text, " There is no ballot in progress.")
+	end
+end
+
+concommand.Add("cl_mvp_ballot", MapVotePools.OpenBallot)
+net.Receive("MVP_MapVotePoolsBallot", function()
+	MapVotePools.OpenBallot()
+end)
+
 net.Receive("MVP_RTV_Delay", function()
 	chat.AddText(MapVotePools.COLORS.chat_highlight, "[RTV]", MapVotePools.COLORS.chat_text, " The vote has been rocked, map vote will begin on round end.")
 end)
@@ -98,8 +150,24 @@ local star_mat = Material("icon16/star.png")
 -- local heart_mat = Material("icon16/heart.png")
 -- local shield_mat = Material("icon16/shield.png")
 
-local PANEL = {}
+MapVotePools.RenderBar = function(w, h, col, map)
+	local edge = look.render_bar_edge_rounding
 
+	local num_players = player.GetCount()
+	local max_players = game.MaxPlayers()
+	local nudge = (w / max_players) / 2
+	local r_min = map.config.MinPlayers > 0 and ((w / max_players) * map.config.MinPlayers) or 0
+	local r_max = map.config.MaxPlayers > 0 and ((w / max_players) * (map.config.MaxPlayers - map.config.MinPlayers)) or w
+	-- draw: background fill
+	draw.RoundedBox(edge, 0, 0, w, h, ColorAlpha(col, look.color_alpha))
+	-- draw: metered edge
+	draw.RoundedBox(edge, r_min - nudge, 0, r_max + nudge, h, ColorAlpha( col, look.render_bar_alpha ))
+	local pip = (w * (num_players / max_players))
+
+	draw.RoundedBox(edge, pip - nudge, 0, nudge, h, MapVotePools.COLORS.goal)
+end
+
+local PANEL = {}
 function PANEL:Init()
 	self:ParentToHUD()
 
@@ -107,51 +175,61 @@ function PANEL:Init()
 	self.Canvas:MakePopup()
 	self.Canvas:SetKeyboardInputEnabled(false)
 
+	local strung_pos = look.countdown_vertifcal_pos
+
 	self.countDown = vgui.Create("DLabel", self.Canvas)
 	self.countDown:SetTextColor(color_white)
 	self.countDown:SetFont("MVP_VoteFontCountdown")
 	self.countDown:SetText("")
-	self.countDown:SetPos(0, 14)
+	self.countDown:SetPos(0, strung_pos)
+	self.countDown:SetAlpha(0)
+	self.countDown:AlphaTo(255, look.countdown_reveal_duration, 0)
+	function self.countDown:PerformLayout()
+		self:SizeToContents()
+		self:CenterHorizontal()
+	end
 
+	strung_pos = strung_pos + look.countdown_text_size + look.playercount_vertical_pos
 	self.playerCount = vgui.Create("DLabel", self.Canvas)
 	self.playerCount:SetTextColor(color_white)
 	self.playerCount:SetFont("MVP_VoteFontPlayercount")
 	self.playerCount:SetText("")
-	self.playerCount:SetPos(0, 54)
+	self.playerCount:SetPos(0, strung_pos)
 
+	strung_pos = strung_pos + look.playercount_text_size
+	print("gahunga", strung_pos)
 	self.mapList = vgui.Create("DPanelList", self.Canvas)
 	self.mapList:SetPaintBackground(false)
-	self.mapList:SetSpacing(4)
-	self.mapList:SetPadding(4)
+	self.mapList:SetSpacing(look.panel_spacing)
+	self.mapList:SetPadding(look.panel_padding)
 	self.mapList:EnableHorizontal(true)
 	self.mapList:EnableVerticalScrollbar()
 
 	self.closeButton = vgui.Create("DButton", self.Canvas)
 	self.closeButton:SetText("")
-
 	self.closeButton.Paint = function(panel, w, h)
 		derma.SkinHook("Paint", "WindowCloseButton", panel, w, h)
 	end
-
 	self.closeButton.DoClick = function()
 		self:SetVisible(false)
+		chat.AddText(MapVotePools.COLORS.chat_highlight, "[MVP]", MapVotePools.COLORS.chat_text, " You closed the ballot window. Use \"!ballot\" to reopen it.")
 	end
 
-	self.maximButton = vgui.Create("DButton", self.Canvas)
-	self.maximButton:SetText("")
-	self.maximButton:SetDisabled(true)
+	-- self.maximButton = vgui.Create("DButton", self.Canvas)
+	-- self.maximButton:SetText("")
+	-- self.maximButton:SetDisabled(true)
 
-	self.maximButton.Paint = function(panel, w, h)
-		derma.SkinHook("Paint", "WindowMaximizeButton", panel, w, h)
-	end
+	-- self.maximButton.Paint = function(panel, w, h)
+	-- 	derma.SkinHook("Paint", "WindowMaximizeButton", panel, w, h)
+	-- end
 
-	self.minimButton = vgui.Create("DButton", self.Canvas)
-	self.minimButton:SetText("")
-	self.minimButton:SetDisabled(true)
+	-- self.minimButton = vgui.Create("DButton", self.Canvas)
+	-- self.minimButton:SetText("")
+	-- self.minimButton:SetDisabled(true)
 
-	self.minimButton.Paint = function(panel, w, h)
-		derma.SkinHook("Paint", "WindowMinimizeButton", panel, w, h)
-	end
+	-- self.minimButton.Paint = function(panel, w, h)
+	-- 	derma.SkinHook("Paint", "WindowMinimizeButton", panel, w, h)
+	-- end
 
 	self.Voters = {}
 end
@@ -162,96 +240,118 @@ function PANEL:PerformLayout()
 	self:SetPos(0, 0)
 	self:SetSize(ScrW(), ScrH())
 
-	local extra = math.Clamp(300, 0, ScrW() - 640)
+	local space = look.panel_size + (look.panel_spacing * 2)
+	local width = math.max(space * look.view_tile_col, look.canvas_width)
+	local extra = width % space
+	local real_wide = width - extra
 	self.Canvas:StretchToParent(0, 0, 0, 0)
-	self.Canvas:SetWide(640 + extra)
-	self.Canvas:SetTall(cy -60)
+	self.Canvas:SetWide(real_wide)
+	self.Canvas:SetTall(ScrH() - look.canvas_header_size)
 	self.Canvas:SetPos(0, 0)
 	self.Canvas:CenterHorizontal()
 	self.Canvas:SetZPos(0)
 
-	self.mapList:StretchToParent(0, 90, 0, 0)
+	self.mapList:StretchToParent(extra / 2, look.canvas_header_size, extra / 2, 0)
 
-	local buttonPos = 640 + extra - 31 * 3
-
-	self.closeButton:SetPos(buttonPos - 31 * 0, 4)
-	self.closeButton:SetSize(31, 31)
+	local buttonPos = width - (look.ballot_header_button_width / 2)
+	self.closeButton:SetPos(buttonPos - look.ballot_header_button_width * 1, look.canvas_header_size - look.ballot_header_button_width + 8)
+	self.closeButton:SetSize(look.ballot_header_button_width, look.ballot_header_button_width)
 	self.closeButton:SetVisible(true)
 
-	self.maximButton:SetPos(buttonPos - 31 * 1, 4)
-	self.maximButton:SetSize(31, 31)
-	self.maximButton:SetVisible(true)
+	-- self.maximButton:SetPos(buttonPos - look.ballot_header_button_width * 1, 4)
+	-- self.maximButton:SetSize(look.ballot_header_button_width, look.ballot_header_button_width)
+	-- self.maximButton:SetVisible(true)
 
-	self.minimButton:SetPos(buttonPos - 31 * 2, 4)
-	self.minimButton:SetSize(31, 31)
-	self.minimButton:SetVisible(true)
+	-- self.minimButton:SetPos(buttonPos - look.ballot_header_button_width * 2, 4)
+	-- self.minimButton:SetSize(look.ballot_header_button_width, look.ballot_header_button_width)
+	-- self.minimButton:SetVisible(true)
 end
 
 function PANEL:AddVoter(voter)
-	for k, v in pairs(self.Voters) do
+	for _, v in pairs(self.Voters) do
 		if (v.Player and v.Player == voter) then
 			return false
 		end
 	end
 
-	local icon_container = vgui.Create("Panel", self.mapList:GetCanvas())
-	local icon = vgui.Create("AvatarImage", icon_container)
-	icon:SetSize(16, 16)
-	icon:SetZPos(1000)
-	icon:SetTooltip(voter:Name())
-	icon_container.Player = voter
-	icon_container:SetTooltip(voter:Name())
-	icon:SetPlayer(voter, 16)
-
-	if MapVotePools.HasExtraVotePower(voter) then
-		icon_container:SetSize(40, 20)
-		icon:SetPos(21, 2)
-		icon_container.img = star_mat
-	else
-		icon_container:SetSize(20, 20)
-		icon:SetPos(2, 2)
-	end
-
-	icon_container.Paint = function(s, w, h)
-		draw.RoundedBox(4, 0, 0, w, h, Color(255, 0, 0, 80))
-
-		if ( icon_container.img ) then
-			surface.SetMaterial(icon_container.img)
+	local avatar_container = vgui.Create("Panel", self.mapList:GetCanvas())
+	avatar_container.Player = voter
+	avatar_container:SetTooltip(voter:Nick())
+	avatar_container:SetMouseInputEnabled(true)
+	avatar_container:SetAlpha(255)
+	function avatar_container:Paint(w, h)
+		-- draw.RoundedBox(4, look.avatar_outline_size, look.avatar_outline_size, w - look.avatar_outline_size, h - look.avatar_outline_size, Color(255, 0, 0, 80))
+		if avatar_container.img then
+			surface.SetMaterial(avatar_container.img)
 			surface.SetDrawColor(Color(255, 255, 255))
-			surface.DrawTexturedRect(2, 2, 16, 16)
+			surface.DrawTexturedRect(look.avatar_outline_size, look.avatar_outline_size, look.avatar_size, look.avatar_size)
 		end
 	end
 
-	table.insert(self.Voters, icon_container)
+	local avatar_image = vgui.Create("AvatarImage", avatar_container)
+	avatar_image:SetSize(look.avatar_size, look.avatar_size)
+	avatar_image:SetZPos(1000)
+	avatar_image:SetTooltip(voter:Name())
+	avatar_image:SetPlayer(voter, look.avatar_size)
+	-- Make it look like the avatar is clickable (because it is)
+	avatar_image:SetCursor("hand")
+	-- Passthrough clicks from the avatar to the map button
+	avatar_image.OnMousePressed = function()
+		avatar_container.MapButton:OnMousePressed()
+	end
+
+	if true or MapVotePools.HasExtraVotePower(voter) then
+		avatar_container:SetSize(look.avatar_size, look.avatar_size)
+		avatar_container.img = star_mat
+		avatar_image:SetPos(look.avatar_outline_size, look.avatar_outline_size)
+	else
+		local compound = look.avatar_size + (look.avatar_outline_size * 2)
+		avatar_container:SetSize(compound, compound)
+		avatar_image:SetPos(look.avatar_outline_size, look.avatar_outline_size)
+	end
+
+	table.insert(self.Voters, avatar_container)
 end
 
 function PANEL:Think()
-	for k, v in pairs(self.mapList:GetItems()) do
+	for _, v in pairs(self.mapList:GetItems()) do
 		v.NumVotes = 0
 	end
 
-	for k, v in pairs(self.Voters) do
+	for _, v in pairs(self.Voters) do
 		if ( not IsValid(v.Player) ) then
 			v:Remove()
 		else
 			if (not MapVotePools.Votes[v.Player:SteamID()] ) then
 				v:Remove()
 			else
-				local bar = self:GetMapButton(MapVotePools.Votes[v.Player:SteamID()])
+				local panel = self:GetMapButton(MapVotePools.Votes[v.Player:SteamID()])
+
+				local avatar_bulk = look.avatar_size
+				local votes_per_row = (look.panel_size - (look.panel_size % avatar_bulk)) / look.avatar_size
+				local column = panel.NumVotes % votes_per_row
+				local row = (panel.NumVotes - column) / votes_per_row
+				-- print("little tyachy", votes_per_row, avatar_bulk, column, row)
+				-- local layer = math.floor(row / 4)
+				-- row = row - layer * 4;
 
 				if ( MapVotePools.HasExtraVotePower(v.Player) ) then
-					bar.NumVotes = bar.NumVotes + 2
+					panel.NumVotes = panel.NumVotes + 2
 				else
-					bar.NumVotes = bar.NumVotes + 1
+					panel.NumVotes = panel.NumVotes + 1
 				end
 
-				if (IsValid(bar)) then
-					local CurrentPos = Vector(v.x, v.y, 0)
-					local NewPos = Vector((bar.x + bar:GetWide()) - 21 * bar.NumVotes - 2, bar.y + (bar:GetTall() * 0.5 - 10), 0)
+				local width = avatar_bulk
+				local height = avatar_bulk
+				if (IsValid(panel)) then
+					local NewPos = Vector(panel.x + column * width, panel.y + row * height, 0)
+					-- local CurrentPos = Vector(v.x, v.y, 0)
+					-- local NewPos = Vector((bar.x + bar:GetWide()) - 21 * bar.NumVotes - 2, bar.y + (bar:GetTall() * 0.5 - 10), 0)
 
 					if (not v.CurPos or v.CurPos ~= NewPos) then
-						v:MoveTo(NewPos.x, NewPos.y, 0.3)
+						v:MoveTo(NewPos.x, NewPos.y, look.avatar_move_duration)
 						v.CurPos = NewPos
+						v.MapButton = panel
 					end
 				end
 			end
@@ -271,12 +371,12 @@ end
 
 function PANEL:SetMaps(maps)
 	self.mapList:Clear()
+	local transCounter = 0
 	local num_players = player.GetCount()
 	local max_players = game.MaxPlayers()
 
 	for k, map in RandomPairs(maps) do
-		local button = vgui.Create("DButton", self.mapList)
-		button.ID = k
+		transCounter = transCounter + 1
 
 		local delta_low  = 0
 		local delta_high = 0
@@ -284,6 +384,11 @@ function PANEL:SetMaps(maps)
 
 		local min = 0
 		local max = max_players
+
+		-- map.config.MinPlayers = 1
+		-- map.config.MaxPlayers = 1
+		map.config.MinPlayers = math.random(0, game.MaxPlayers())
+		map.config.MaxPlayers = math.random(map.config.MinPlayers, game.MaxPlayers())
 
 		if map.config.MinPlayers > 0 and num_players < map.config.MinPlayers then
 			delta_low  = map.config.MinPlayers - num_players
@@ -293,107 +398,145 @@ function PANEL:SetMaps(maps)
 			delta_high = max_players - map.config.MaxPlayers
 		end
 		max = string.format("%02d", map.config.MaxPlayers > 0 and map.config.MaxPlayers or max_players)
-
-
-		-- if c.MinPlayers > 0 and num_players < c.MinPlayers then
-		-- 	delta_low  = c.MinPlayers - num_players
-		-- end
-		-- if c.MaxPlayers > 0 and num_players > c.MaxPlayers then
-		-- 	delta_high = max_players - c.MaxPlayers
-		-- end
-		-- delta = math.max(delta_low, delta_high)
-
-
-		-- if map.stats.SpawnPoints > 0 then
-		-- 	spn = string.format("%02d", map.stats.SpawnPoints)
-		-- end
 		delta = math.max(delta_low, delta_high)
-
-		-- local ratio = MapVotePools.Utils.Scale(num_players, map_data.MinPlayers, map_data.MaxPlayers, 0, 1)
 		local ratio = MapVotePools.Utils.Scale(delta, 0, max_players / MapVotePools.CVAR.SEVERITY_SCALE, 0, 1)
-		-- print("rat", min, max, delta, ratio, map.name)
-		-- local ratio = (num_players / ((map_data.MinPlayers + map_data.MaxPlayers) / 2))
-		-- if ratio < 0.5 then
-			-- target_col = COLORS.amiss
-		-- elseif ratio >= 0.5 then
-			-- target_col = COLORS.amiss
-		-- end
 
-		-- button:SetText(min .. "-" .. max .. "/" .. spn .. " : "  .. math.Round(delta, 2) .. " | " .. map_data.MapName)
+		---@type Color
+		-- local bar_color = ColorAlpha( MapVotePools.Utils.ColorSlerp(MapVotePools.COLORS.ideal, MapVotePools.COLORS.amiss, ratio), 64 )
+		local bar_color = MapVotePools.Utils.ColorSlerp(MapVotePools.COLORS.ideal, MapVotePools.COLORS.amiss, ratio)
+
+
+		--#region panel
+		local panel = vgui.Create("DLabel", self.mapList)
+		local button = vgui.Create("DImageButton", panel)
+		panel.ID = k
+
+		panel.NumVotes = 0
+		panel:SetTooltip(map.name)
+		panel:SetMouseInputEnabled(true)
+		panel:SetSize(look.panel_size, look.panel_size)
+		panel:SetText("")
+		panel:SetPaintBackgroundEnabled(false)
+		panel:SetAlpha(0)
+		panel:AlphaTo(255, look.panel_reveal_duration, transCounter * look.panel_reveal_rate)
+		function panel:PerformLayout()
+			---@diagnostic disable-next-line: missing-parameter
+			self:SetBGColor(self.bgColor)
+		end
+		function panel:OnMousePressed()
+			-- If the panel is clicked, click the button instead
+			button:OnMousePressed()
+		end
+		function panel:Paint(w, h)
+			draw.RoundedBox(0, 0, 0, w, h, ColorAlpha(bar_color, look.color_alpha))
+		end
+		--#endregion panel
+
+		--#region button
+		button:SetImage(self:GetMapThumbnail(map.name))
+		function button:OnMousePressed()
+			net.Start("MVP_MapVotePoolsUpdate")
+				net.WriteUInt(MapVotePools.UPDATE_VOTE, 3)
+				net.WriteUInt(panel.ID, 32)
+			net.SendToServer()
+		end
+		button:SetPos(look.panel_padding, look.panel_padding)
+		button:SetSize(look.panel_size - (look.panel_padding * 2), look.panel_size - (look.panel_padding * 2))
+		--#endregion button
+
+		local raw_depth = MapVotePools.Utils.LogRamp(delta, max_players, look.panel_discourage_alpha_ramp)
+		local hard_alpha = math.Round(raw_depth * 255)
+
+		local image = button:GetChild(0)
+		local imagePaint = image.Paint
+		function image:Paint(w, h)
+			-- surface.SetAlphaMultiplier(1-raw_depth)
+			imagePaint(self, w, h)
+			local icon_color = ColorAlpha( MapVotePools.COLORS.bad_map, hard_alpha )
+			surface.SetAlphaMultiplier(1)
+			surface.SetDrawColor(panel.bgColor or icon_color)
+			surface.DrawRect(0, 0, w, h)
+			-- draw.RoundedBox(0, 0, 0, w, h, Color(255, 0, 0, 255))
+		end
+
+		local bar_size = look.text_height + (look.text_pad * 2)
+		local bottom_bar = vgui.Create("Panel", button)
+		bottom_bar:SetPos(0, look.panel_size - (look.panel_padding * 2) - bar_size + look.text_pad)
+		bottom_bar:SetSize(look.panel_size - (look.panel_padding * 2), bar_size)
+		-- bottom_bar:SetPaintBackgroundEnabled(true)
+		function bottom_bar:Paint(w, h)
+			MapVotePools.RenderBar(w, h, bar_color, map)
+		end
+
+
+		local text_min = vgui.Create("DLabel", bottom_bar)
+		text_min:StretchToParent(0, 0, 0, 0)
 		local map_text = string.format(
 			"%s:%s | %s",
 			min,
 			max,
 			map.name
 		)
-		-- string.format("-%02d", delta),
-		button:SetText(map_text)
+		text_min:SetText(min)
+		text_min:SetTextInset(look.text_inset, 0)
+		text_min:SetContentAlignment(4)
+		text_min:SetFont("MVP_VoteFont")
 
-		button.DoClick = function()
-			net.Start("MVP_MapVotePoolsUpdate")
-				net.WriteUInt(MapVotePools.UPDATE_VOTE, 3)
-				net.WriteUInt(button.ID, 32)
-			net.SendToServer()
+		local text_max = vgui.Create("DLabel", bottom_bar)
+		text_max:StretchToParent(0, 0, 0, 0)
+		-- text_max:SetPos(0, look.panel_size - (look.panel_padding * 2) - bar_size + look.text_pad)
+		-- text_max:SetSize(look.panel_size - (look.panel_padding * 2), bar_size)
+		text_max:SetText(max)
+		text_max:SetTextInset(look.text_inset, 0)
+		text_max:SetContentAlignment(6)
+		text_max:SetFont("MVP_VoteFont")
+
+		local text2 = vgui.Create("DLabel", button)
+		-- local bar_size = look.text_height + (look.text_pad * 2)
+		text2:SetPos(0, 0)
+		text2:SetSize(look.panel_size - (look.panel_padding * 2), bar_size)
+		local map_text = string.format(
+			"%s:%s | %s",
+			min,
+			max,
+			map.name
+		)
+		text2:SetText(map.name)
+		text2:SetTextInset(8, 0)
+		text2:SetContentAlignment(4)
+		text2:SetFont("MVP_VoteFont")
+		text2:SetPaintBackgroundEnabled(true)
+		function text2:PerformLayout()
+			self:SetBGColor(ColorAlpha(MapVotePools.COLORS.bad_map, 128))
 		end
+		-- function text2:Paint(w, h)
+		-- 	-- draw.
+		-- 	surface.SetAlphaMultiplier(0.25)
+		-- 	-- surface.SetDrawColor(ColorAlpha(MapVotePools.COLORS.bad_map, 64))
+		-- 	surface.SetDrawColor(MapVotePools.COLORS.bad_map)
+		-- 	surface.DrawRect(0, 0, w, h)
+		-- 	surface.SetAlphaMultiplier(1)
+		-- 	-- draw.RoundedBox(4, 0, 0, w, h, ColorAlpha(MapVotePools.COLORS.bad_map, 16))
+		-- 	-- MapVotePools.RenderBar(w, h, bar_color, map)
+		-- end
 
-		do
-			local Paint = button.Paint
-			button.Paint = function(s, w, h)
-				--  COLORS.normal
-				-- local target_col = COLORS.amiss
 
-				-- if map_data.SpawnPoints > 0 then
-				--     col = COLORS.ideal
-				-- end
-
-				local col = ColorAlpha( MapVotePools.Utils.ColorSlerp(MapVotePools.COLORS.ideal, MapVotePools.COLORS.amiss, ratio), 64 )
-
-				-- if delta > 0 then
-				-- else
-					-- col = COLORS.ideal
-				-- end
-
-				if (button.bgColor) then
-					col = button.bgColor
-				end
-
-				draw.RoundedBox(4, 0, 0, w, h, col)
-				local nudge = (w / max_players) / 2
-				local r_min = 0
-				if map.config.MinPlayers > 0 then
-					r_min = ((w / max_players) * map.config.MinPlayers)
-				end
-				local r_max = w
-				if map.config.MaxPlayers > 0 then
-					r_max = ((w / max_players) * (map.config.MaxPlayers - map.config.MinPlayers))
-				end
-				draw.RoundedBox(4, r_min - nudge, 0, r_max + nudge, h, ColorAlpha( col, 128 ))
-				local pip = (w * (num_players / max_players))
-
-				draw.RoundedBox(4, pip - nudge, 0, nudge, h, MapVotePools.COLORS.goal)
-				Paint(s, w, h)
-			end
-		end
-
-		button:SetTextColor(color_white)
-		button:SetContentAlignment(4)
-		button:SetTextInset(8, 0)
-		button:SetFont("MVP_VoteFont")
-
-		local extra = math.Clamp(300, 0, ScrW() - 640)
-
-		button:SetPaintBackground(false)
-		button:SetTall(24)
-		button:SetWide(285 + (extra / 2))
-		button.NumVotes = 0
-
-		self.mapList:AddItem(button)
+		self.mapList:AddItem(panel)
 	end
 end
 
+function PANEL:GetMapThumbnail(name)
+	if file.Exists("maps/thumb/" .. name .. ".png", "GAME") then
+		return "maps/thumb/" .. name .. ".png"
+	elseif file.Exists("maps/" .. name .. ".png", "GAME") then
+		return "maps/" .. name .. ".png"
+	else
+		return "maps/thumb/noicon.png"
+	end
+end
 function PANEL:GetMapButton(id)
-	for k, v in pairs(self.mapList:GetItems()) do
-		if ( v.ID == id ) then return v end
+	for _, v in pairs(self.mapList:GetItems()) do
+		if v.ID == id then return v end
 	end
 
 	return false
@@ -413,14 +556,10 @@ function PANEL:Flash(id)
 		local flash_func = function() bar.bgColor = MapVotePools.COLORS.flash surface.PlaySound( "hl1/fvox/blip.wav" ) end
 		local unflash_func = function() bar.bgColor = nil end
 
-		local flashes = 3
-		local flash_interval = 0.2
-
 		local t = 0.0
-
-		for flash = 1, flashes do
-			timer.Simple( t,  flash_func ) t = t + flash_interval
-			timer.Simple( t,  unflash_func ) t = t + flash_interval
+		for _ = 1, look.flash_count do
+			timer.Simple( t,  flash_func ) t = t + look.flash_interval
+			timer.Simple( t,  unflash_func ) t = t + look.flash_interval
 		end
 		timer.Simple( t,  function() bar.bgColor = MapVotePools.COLORS.final end )
 	end

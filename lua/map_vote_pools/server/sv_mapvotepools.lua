@@ -78,6 +78,17 @@ net.Receive("MVP_MapVotePoolsUpdate", function(len, ply)
 					net.WriteEntity(ply)
 					net.WriteUInt(map_id, 32)
 				net.Broadcast()
+
+				--@DEBUG please remove this
+				if true then
+					for _, uply in pairs(player.GetAll()) do
+						net.Start("MVP_MapVotePoolsUpdate")
+							net.WriteUInt(MapVotePools.UPDATE_VOTE, 3)
+							net.WriteEntity(uply)
+							net.WriteUInt(map_id, 32)
+						net.Broadcast()
+					end
+				end
 			end
 		end
 	end

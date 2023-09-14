@@ -129,17 +129,20 @@ MapVotePools.CVARS = MapVotePools.CVARS or {
 }
 
 MapVotePools.COLORS = {
-	normal = Color(128,128,128,32),
-	ideal = Color(0,255,0,64),
-	amiss = Color(255,0,0,16),
-	goal = Color( 0, 0, 255, 192 ),
+	normal = Color(128,128,128,255),
+	ideal = Color(0,255,0,255),
+	amiss = Color(255,0,0,255),
+	goal = Color( 0, 0, 255, 255 ),
 
 	flash = Color( 0, 255, 255 ),
-	final = Color( 100, 100, 100 ),
+	final = Color( 100, 100, 100, 100 ),
 
 	chat_highlight = Color( 102,255,51 ),
 	chat_unhighlight = Color( 255,102,51 ),
 	chat_text = Color( 255,255,255 ),
+
+	-- bad_map = Color(64, 64, 64),
+	bad_map = Color(0, 0, 0, 255),
 
 	button = Color(0, 0, 0, 200),
 }
@@ -149,6 +152,17 @@ MapVotePools.Utils = {}
 MapVotePools.Utils.Scale = function(valueIn, baseMin, baseMax, limitMin, limitMax)
 	return ( limitMax - limitMin ) * ( valueIn - baseMin ) / ( baseMax - baseMin ) + limitMin
 end
+
+MapVotePools.Utils.LogRamp = function(x, n, b)
+	return math.pow(x / n, b)
+end
+
+MapVotePools.Utils.GentleLogRamp = function(x, n, b)
+	n = n or 1
+	b = b or 1
+	return math.log10((b * x) + 1) / math.log10((b * n) + 1)
+end
+
 MapVotePools.Utils.ColorSlerp = function(from,to,transition)
 	local f_h, f_s, f_v = from:ToHSV()
 	local f_a = from.a
@@ -194,6 +208,13 @@ MapVotePools.Nominate.UnnominateMapChatCommands = {
 	"unnominate"
 }
 
+MapVotePools.Ballot = MapVotePools.Ballot or {}
+MapVotePools.Ballot.BallotChatCommands = {
+	"!ballot",
+	"/ballot",
+	"ballot"
+}
+
 function MapVotePools.HasExtraVotePower(ply)
 	return false
 end
@@ -203,13 +224,16 @@ if SERVER then
 	AddCSLuaFile("map_vote_pools/client/cl_mapvotepools.lua")
 	AddCSLuaFile("map_vote_pools/client/cl_nominate.lua")
 	AddCSLuaFile("map_vote_pools/client/cl_rtv.lua")
+	AddCSLuaFile("map_vote_pools/client/cl_ballot.lua")
 
 	include("map_vote_pools/server/sv_mapvotepools.lua")
 	include("map_vote_pools/server/sv_autovote.lua")
 	include("map_vote_pools/server/sv_nominate.lua")
 	include("map_vote_pools/server/sv_rtv.lua")
+	include("map_vote_pools/server/sv_ballot.lua")
 else
 	include("map_vote_pools/client/cl_mapvotepools.lua")
 	include("map_vote_pools/client/cl_nominate.lua")
 	include("map_vote_pools/client/cl_rtv.lua")
+	include("map_vote_pools/client/cl_ballot.lua")
 end

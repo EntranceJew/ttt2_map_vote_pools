@@ -80,4 +80,16 @@ if MapVotePools.CVARS.use_ulx_commands:GetBool() then
 	nominatemapcmd:defaultAccess( ULib.ACCESS_ALL )
 	nominatemapcmd:help( "Nominate a map name to appear on the next map vote ballot." )
 	nominatemapcmd:setOpposite( "ulx unnominate", {_, "", true}, "!unnominate", true )
+
+	local function MVP_openballot( calling_ply )
+		if SERVER then
+			succ = MapVotePools.Ballot.HandleClientBallot(calling_ply)
+		end
+		if succ then ulx.fancyLogAdmin( calling_ply, "#A unnominated their map." ) end
+	end
+
+	local ballotcmd = ulx.command( CATEGORY_NAME, "ulx ballot", MVP_openballot, "!ballot", true )
+	ballotcmd.hide = true
+	ballotcmd:defaultAccess( ULib.ACCESS_ALL )
+	ballotcmd:help( "Open the map ballot after closing it." )
 end
