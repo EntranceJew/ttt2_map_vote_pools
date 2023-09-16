@@ -163,6 +163,13 @@ function CLGAMEMODESUBMENU:Populate(parent)
 	})
 
 	general:MakeHelp({
+		label = "help_ttt2_sv_mvp_sync_with_rsm",
+	})
+	general:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_sync_with_rsm",
+		serverConvar = "sv_mvp_enable_cooldown"
+	})
+	general:MakeHelp({
 		label = "help_ttt2_sv_mvp_map_prefixes",
 	})
 	general:MakeTextEntry({

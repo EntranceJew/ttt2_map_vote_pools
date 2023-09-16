@@ -38,6 +38,13 @@ L["label_ttt2_sv_mvp_maps_before_revote"] = "Maps Before Revote"
 L["help_ttt2_sv_mvp_maps_before_revote"] = "How many maps must be played before a map can reappear on the ballot with cooldowns enabled."
 L["label_ttt2_sv_mvp_auto_gamemode"] = "Auto Gamemode"
 L["help_ttt2_sv_mvp_auto_gamemode"] = "Determine if we need to change the current gamemode based on the map that won the vote."
+L["label_ttt2_sv_mvp_sync_with_rsm"] = "Sync With Random Starting Map"
+L["help_ttt2_sv_mvp_sync_with_rsm"] = [[If enabled, will also update the convars for Random Starting Map by The Stig, thes include:
+- rsm_map_prefixes
+- rsm_map_blacklist
+- rsm_map_whitelist
+Additionally, it will exclude the map specifided by 'rsm_map_to_switch_from'
+NOTE: This will *never* read the values from RSM, so changes to RSM will be lost if not migrated manually.]]
 L["label_ttt2_sv_mvp_map_prefixes"] = "Map Prefixes"
 L["help_ttt2_sv_mvp_map_prefixes"] = "The prefixes to use to search for maps.\nSeparate each entry with a \"|\".\nIf empty, will check for a text file named after the gamemode."
 L["label_ttt2_sv_mvp_map_whitelist_enabled"] = "Map Whitelist Enabled"

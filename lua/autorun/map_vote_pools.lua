@@ -76,6 +76,11 @@ MapVotePools.CVARS = MapVotePools.CVARS or {
 		"3",
 		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
 	),
+	sync_with_rsm = CreateConVar(
+		"sv_mvp_sync_with_rsm",
+		"1",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
 	map_prefixes = CreateConVar(
 		"sv_mvp_map_prefixes",
 		"ttt_",
@@ -121,11 +126,21 @@ MapVotePools.CVARS = MapVotePools.CVARS or {
 		"1",
 		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
 	),
-	-- debug_print = CreateConVar(
-	--     "sv_psng_debug_print",
-	--     "0",
-	--     {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
-	-- ),
+	bots_follow_vote_lead = CreateConVar(
+	    "sv_mvp_bots_follow_vote_lead",
+	    "0",
+	    {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	debug = CreateConVar(
+	    "sv_mvp_debug",
+	    "0",
+	    {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	debug_random_min_max = CreateConVar(
+	    "sv_mvp_debug_random_min_max",
+	    "0",
+	    {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
 }
 
 MapVotePools.COLORS = {

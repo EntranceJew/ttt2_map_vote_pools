@@ -79,9 +79,8 @@ net.Receive("MVP_MapVotePoolsUpdate", function(len, ply)
 					net.WriteUInt(map_id, 32)
 				net.Broadcast()
 
-				--@DEBUG please remove this
-				if true then
-					for _, uply in pairs(player.GetAll()) do
+				if MapVotePools.CVARS.debug:GetBool() and MapVotePools.CVARS.bots_follow_vote_lead:GetBool() then
+					for _, uply in pairs(player.GetBots()) do
 						net.Start("MVP_MapVotePoolsUpdate")
 							net.WriteUInt(MapVotePools.UPDATE_VOTE, 3)
 							net.WriteEntity(uply)
@@ -93,6 +92,53 @@ net.Receive("MVP_MapVotePoolsUpdate", function(len, ply)
 		end
 	end
 end)
+
+function MapVotePools.SyncWhitelist(new_value)
+	if not MapVotePools.CVARS.sync_with_rsm:GetBool() then return end
+	local cvar = GetConVar("rsm_map_whitelist")
+	if cvar ~= nil then
+		cvar:SetString( table.concat(string.Split(new_value, "|"), ",") )
+	end
+end
+function MapVotePools.SyncBlacklist(new_value)
+	if not MapVotePools.CVARS.sync_with_rsm:GetBool() then return end
+	local cvar = GetConVar("rsm_map_blacklist")
+	if cvar ~= nil then
+		cvar:SetString( table.concat(string.Split(new_value, "|"), ",") )
+	end
+end
+
+function MapVotePools.SetupRSMSync()
+	cvars.AddChangeCallback("sv_mvp_map_prefixes", function(_,_,n)
+		if not MapVotePools.CVARS.sync_with_rsm:GetBool() then return end
+		local cvar = GetConVar("rsm_map_prefixes")
+		if cvar ~= nil then
+			cvar:SetString( table.concat(string.Split(n, "|"), ",") )
+		end
+	end, "mvp_rsm_sync")
+	cvars.AddChangeCallback("sv_mvp_map_whitelist_enabled", function(_,_,n)
+		if tonumber(n) == 1 then
+			MapVotePools.SyncWhitelist(MapVotePools.CVARS.map_whitelist:GetString())
+		elseif tonumber(n) == 0 then
+			MapVotePools.SyncWhitelist("")
+		end
+	end, "mvp_rsm_sync")
+	cvars.AddChangeCallback("sv_mvp_map_whitelist", function(_,_,n)
+		if not MapVotePools.CVARS.sync_with_rsm:GetBool() then return end
+		MapVotePools.SyncWhitelist(n)
+	end, "mvp_rsm_sync")
+	cvars.AddChangeCallback("sv_mvp_map_blacklist_enabled", function(_,_,n)
+		if tonumber(n) == 1 then
+			MapVotePools.SyncBlacklist(MapVotePools.CVARS.map_blacklist:GetString())
+		elseif tonumber(n) == 0 then
+			MapVotePools.SyncBlacklist("")
+		end
+	end, "mvp_rsm_sync")
+	cvars.AddChangeCallback("sv_mvp_map_blacklist", function(_,_,n)
+		if not MapVotePools.CVARS.sync_with_rsm:GetBool() then return end
+		MapVotePools.SyncBlacklist(n)
+	end, "mvp_rsm_sync")
+end
 
 function MapVotePools.ServerInit()
 	if not file.Exists( "mapvotepools", "DATA") then
@@ -123,6 +169,8 @@ function MapVotePools.ServerInit()
 	else
 		MapVotePools.Data.RecentMaps = {}
 	end
+
+	MapVotePools.SetupRSMSync()
 end
 
 function MapVotePools.DetermineGameMode(map)

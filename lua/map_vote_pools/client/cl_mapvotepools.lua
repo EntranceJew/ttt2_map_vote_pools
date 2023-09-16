@@ -385,10 +385,10 @@ function PANEL:SetMaps(maps)
 		local min = 0
 		local max = max_players
 
-		-- map.config.MinPlayers = 1
-		-- map.config.MaxPlayers = 1
-		map.config.MinPlayers = math.random(0, game.MaxPlayers())
-		map.config.MaxPlayers = math.random(map.config.MinPlayers, game.MaxPlayers())
+		if MapVotePools.CVARS.debug_random_min_max:GetBool() then
+			map.config.MinPlayers = math.random(0, game.MaxPlayers())
+			map.config.MaxPlayers = math.random(map.config.MinPlayers, game.MaxPlayers())
+		end
 
 		if map.config.MinPlayers > 0 and num_players < map.config.MinPlayers then
 			delta_low  = map.config.MinPlayers - num_players
@@ -404,7 +404,6 @@ function PANEL:SetMaps(maps)
 		---@type Color
 		-- local bar_color = ColorAlpha( MapVotePools.Utils.ColorSlerp(MapVotePools.COLORS.ideal, MapVotePools.COLORS.amiss, ratio), 64 )
 		local bar_color = MapVotePools.Utils.ColorSlerp(MapVotePools.COLORS.ideal, MapVotePools.COLORS.amiss, ratio)
-
 
 		--#region panel
 		local panel = vgui.Create("DLabel", self.mapList)
