@@ -10,7 +10,7 @@ function MapVotePools.Nominate.TotalNominations()
 	MapVotePools.Nominate.MapNominationCounts = {}
 	for steam64, map_name in pairs(MapVotePools.Nominate.PlayerMapNominations) do
 		local nominations = MapVotePools.Nominate.MapNominationCounts[map_name] or 0
-		MapVotePools.Nominate.MapNominationCounts[map_name] = nominations and nominations + 1
+		MapVotePools.Nominate.MapNominationCounts[map_name] = nominations + 1
 		total_nominations = total_nominations + 1
 	end
 	return total_nominations, MapVotePools.Nominate.MapNominationCounts

@@ -50,18 +50,151 @@ function CLGAMEMODESUBMENU:Populate(parent)
 			end,
 			decimal = 0
 		})
+
+		current_map:MoveToBefore(parent:Find("map_vote_pools_settings_score"))
 	end)
 
 	net.Start("MVP_AdminRequestMapData")
 	net.SendToServer()
 
-	-- possession:MakeCheckBox({
-	--     label = "label_ttt2_sv_psng_transparent_render_mode",
-	--     serverConvar = "sv_psng_transparent_render_mode"
+	local score = vgui.CreateTTT2Form(parent, "map_vote_pools_settings_score")
+
+	score:MakeHelp({
+		label = "help_ttt2_sv_mvp_skip_sort",
+	})
+	score:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_skip_sort",
+		serverConvar = "sv_mvp_skip_sort"
+	})
+
+	score:MakeHelp({
+		label = "help_ttt2_sv_mvp_score_uninducted",
+	})
+	score:MakeSlider({
+		label = "label_ttt2_sv_mvp_score_uninducted",
+		serverConvar = "sv_mvp_score_uninducted",
+		min = -1000,
+		max =  1000,
+		decimal = 0,
+	})
+	score:MakeHelp({
+		label = "help_ttt2_sv_mvp_score_play_count_penalty",
+	})
+	score:MakeSlider({
+		label = "label_ttt2_sv_mvp_score_play_count_penalty",
+		serverConvar = "sv_mvp_score_play_count_penalty",
+		min = -1000,
+		max =  1000,
+		decimal = 0,
+	})
+	score:MakeHelp({
+		label = "help_ttt2_sv_mvp_score_cooldown_penalty",
+	})
+	score:MakeSlider({
+		label = "label_ttt2_sv_mvp_score_cooldown_penalty",
+		serverConvar = "sv_mvp_score_cooldown_penalty",
+		min = -1000,
+		max =  1000,
+		decimal = 0,
+	})
+	score:MakeHelp({
+		label = "help_ttt2_sv_mvp_score_map_too_big",
+	})
+	score:MakeSlider({
+		label = "label_ttt2_sv_mvp_score_map_too_big",
+		serverConvar = "sv_mvp_score_map_too_big",
+		min = -1000,
+		max =  1000,
+		decimal = 0,
+	})
+	score:MakeHelp({
+		label = "help_ttt2_sv_mvp_score_insufficient_spawns",
+	})
+	score:MakeSlider({
+		label = "label_ttt2_sv_mvp_score_insufficient_spawns",
+		serverConvar = "sv_mvp_score_insufficient_spawns",
+		min = -1000,
+		max =  1000,
+		decimal = 0,
+	})
+	score:MakeHelp({
+		label = "help_ttt2_sv_mvp_score_nomination_value",
+	})
+	score:MakeSlider({
+		label = "label_ttt2_sv_mvp_score_nomination_value",
+		serverConvar = "sv_mvp_score_nomination_value",
+		min = -1000,
+		max =  1000,
+		decimal = 0,
+	})
+
+	local interface = vgui.CreateTTT2Form(parent, "map_vote_pools_settings_interface")
+	interface:MakeHelp({
+		label = "help_ttt2_sv_mvp_use_chat_commands",
+	})
+	interface:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_use_chat_commands",
+		serverConvar = "sv_mvp_use_chat_commands"
+	})
+
+	interface:MakeHelp({
+		label = "help_ttt2_sv_mvp_use_ulx_commands",
+	})
+	interface:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_use_ulx_commands",
+		serverConvar = "sv_mvp_use_ulx_commands"
+	})
+
+	-- interface:MakeHelp({
+	-- 	label = "help_ttt2_sv_mvp_ui_panel_use_image",
 	-- })
-	-- possession:MakeHelp({
-	--     label = "help_ttt2_sv_psng_transparent_render_mode"
+	-- interface:MakeCheckBox({
+	-- 	label = "label_ttt2_sv_mvp_ui_panel_use_image",
+	-- 	serverConvar = "sv_mvp_ui_panel_use_image"
 	-- })
+
+	interface:MakeHelp({
+		label = "help_ttt2_sv_mvp_ui_severity_scale",
+	})
+	interface:MakeSlider({
+		label = "label_ttt2_sv_mvp_ui_severity_scale",
+		serverConvar = "sv_mvp_ui_severity_scale",
+		min = 0,
+		max = 5,
+		decimal = 2,
+	})
+	interface:MakeHelp({
+		label = "help_ttt2_sv_mvp_ui_icon_blackout_rate",
+	})
+	interface:MakeSlider({
+		label = "label_ttt2_sv_mvp_ui_icon_blackout_rate",
+		serverConvar = "sv_mvp_ui_icon_blackout_rate",
+		min = 0,
+		max = 1,
+		decimal = 2,
+	})
+	interface:MakeHelp({
+		label = "help_ttt2_sv_mvp_ui_icon_tile_columns",
+	})
+	interface:MakeSlider({
+		label = "label_ttt2_sv_mvp_ui_icon_tile_columns",
+		serverConvar = "sv_mvp_ui_icon_tile_columns",
+		min = 0,
+		max = 16,
+		decimal = 0,
+	})
+	interface:MakeHelp({
+		label = "help_ttt2_sv_mvp_ui_icon_scale",
+	})
+	interface:MakeSlider({
+		label = "label_ttt2_sv_mvp_ui_icon_scale",
+		serverConvar = "sv_mvp_ui_icon_scale",
+		min = 64,
+		max = 512,
+		decimal = 0,
+	})
+
+
 
 	local rtv = vgui.CreateTTT2Form(parent, "map_vote_pools_settings_rtv")
 
@@ -152,6 +285,14 @@ function CLGAMEMODESUBMENU:Populate(parent)
 	})
 
 	general:MakeHelp({
+		label = "help_ttt2_sv_mvp_cooldown_use_penalty",
+	})
+	general:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_cooldown_use_penalty",
+		serverConvar = "sv_mvp_cooldown_use_penalty"
+	})
+
+	general:MakeHelp({
 		label = "help_ttt2_sv_mvp_maps_before_revote",
 	})
 	general:MakeSlider({
@@ -167,7 +308,7 @@ function CLGAMEMODESUBMENU:Populate(parent)
 	})
 	general:MakeCheckBox({
 		label = "label_ttt2_sv_mvp_sync_with_rsm",
-		serverConvar = "sv_mvp_enable_cooldown"
+		serverConvar = "sv_mvp_sync_with_rsm"
 	})
 	general:MakeHelp({
 		label = "help_ttt2_sv_mvp_map_prefixes",
@@ -216,28 +357,19 @@ function CLGAMEMODESUBMENU:Populate(parent)
 		serverConvar = "sv_mvp_auto_gamemode"
 	})
 
-	general:MakeHelp({
-		label = "help_ttt2_sv_mvp_skip_sort",
+	local debug = vgui.CreateTTT2Form(parent, "map_vote_pools_settings_debug")
+	debug:MakeHelp({
+		label = "help_ttt2_sv_mvp_debug",
 	})
-	general:MakeCheckBox({
-		label = "label_ttt2_sv_mvp_skip_sort",
-		serverConvar = "sv_mvp_skip_sort"
+	debug:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_debug",
+		serverConvar = "sv_mvp_debug"
 	})
-
-	local interface = vgui.CreateTTT2Form(parent, "map_vote_pools_settings_interface")
-	interface:MakeHelp({
-		label = "help_ttt2_sv_mvp_use_chat_commands",
+	debug:MakeHelp({
+		label = "help_ttt2_sv_mvp_debug_random_min_max",
 	})
-	interface:MakeCheckBox({
-		label = "label_ttt2_sv_mvp_use_chat_commands",
-		serverConvar = "sv_mvp_use_chat_commands"
-	})
-
-	interface:MakeHelp({
-		label = "help_ttt2_sv_mvp_use_ulx_commands",
-	})
-	interface:MakeCheckBox({
-		label = "label_ttt2_sv_mvp_use_ulx_commands",
-		serverConvar = "sv_mvp_use_ulx_commands"
+	debug:MakeCheckBox({
+		label = "label_ttt2_sv_mvp_debug_random_min_max",
+		serverConvar = "sv_mvp_debug_random_min_max"
 	})
 end

@@ -3,12 +3,6 @@ MapVotePools = MapVotePools or {}
 MapVotePools.UPDATE_VOTE = 1
 MapVotePools.UPDATE_WIN = 3
 
-MapVotePools.Data = {}
-MapVotePools.Data.Config = {}
-MapVotePools.Data.MapConfig = {}
-MapVotePools.Data.MapStats = {}
-MapVotePools.Data.RecentMaps = {}
-
 -- loose vars
 MapVotePools.CurrentMaps = {}
 MapVotePools.Votes = {}
@@ -19,16 +13,79 @@ MapVotePools.Continued = false
 
 -- TODO: reroll map pool, extend voting if playercount slips past a breakpoint
 
-MapVotePools.CVAR = MapVotePools.CVAR or {}
-MapVotePools.CVAR.SEVERITY_SCALE = 3
-MapVotePools.CVAR.WEIGHT_BONUSES = {
-	uninducted = 500,
-	map_too_big = -200,
-	insufficient_spawns = -100,
-	nomination_value = 1000,
-}
-
 MapVotePools.CVARS = MapVotePools.CVARS or {
+	skip_sort = CreateConVar(
+		"sv_mvp_skip_sort",
+		"0",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	score_uninducted = CreateConVar(
+		"sv_mvp_score_uninducted",
+		"500",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	score_play_count_penalty = CreateConVar(
+		"sv_mvp_score_play_count_penalty",
+		"-5",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	score_cooldown_penalty = CreateConVar(
+		"sv_mvp_score_cooldown_penalty",
+		"-700",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	score_map_too_big = CreateConVar(
+		"sv_mvp_score_map_too_big",
+		"-200",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	score_insufficient_spawns = CreateConVar(
+		"sv_mvp_score_insufficient_spawns",
+		"-100",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	score_nomination_value = CreateConVar(
+		"sv_mvp_score_nomination_value",
+		"1000",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+
+	use_ulx_commands = CreateConVar(
+		"sv_mvp_use_ulx_commands",
+		"0",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	use_chat_commands = CreateConVar(
+		"sv_mvp_use_chat_commands",
+		"1",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	-- ui_panel_use_image = CreateConVar(
+	-- 	"sv_mvp_ui_panel_use_image",
+	-- 	"1",
+	-- 	{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	-- ),
+	ui_severity_scale = CreateConVar(
+		"sv_mvp_ui_severity_scale",
+		"3",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	ui_icon_blackout_rate = CreateConVar(
+		"sv_mvp_ui_icon_blackout_rate",
+		"0.25",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	ui_icon_tile_columns = CreateConVar(
+		"sv_mvp_ui_icon_tile_columns",
+		"4",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	ui_icon_scale = CreateConVar(
+		"sv_mvp_ui_icon_scale",
+		"256",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+
 	rtv_player_count = CreateConVar(
 		"sv_mvp_rtv_player_count",
 		"3",
@@ -44,13 +101,11 @@ MapVotePools.CVARS = MapVotePools.CVARS or {
 		"60",
 		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
 	),
-
 	nominate_limit_map_print = CreateConVar(
 		"sv_mvp_nominate_limit_map_print",
 		"32",
 		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
 	),
-
 	map_limit = CreateConVar(
 		"sv_mvp_map_limit",
 		"24",
@@ -68,6 +123,11 @@ MapVotePools.CVARS = MapVotePools.CVARS or {
 	),
 	enable_cooldown = CreateConVar(
 		"sv_mvp_enable_cooldown",
+		"1",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
+	cooldown_use_penalty = CreateConVar(
+		"sv_mvp_cooldown_use_penalty",
 		"1",
 		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
 	),
@@ -109,21 +169,6 @@ MapVotePools.CVARS = MapVotePools.CVARS or {
 	auto_gamemode = CreateConVar(
 		"sv_mvp_auto_gamemode",
 		"0",
-		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
-	),
-	skip_sort = CreateConVar(
-		"sv_mvp_skip_sort",
-		"0",
-		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
-	),
-	use_ulx_commands = CreateConVar(
-		"sv_mvp_use_ulx_commands",
-		"0",
-		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
-	),
-	use_chat_commands = CreateConVar(
-		"sv_mvp_use_chat_commands",
-		"1",
 		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
 	),
 	bots_follow_vote_lead = CreateConVar(
@@ -230,8 +275,8 @@ MapVotePools.Ballot.BallotChatCommands = {
 	"ballot"
 }
 
-function MapVotePools.HasExtraVotePower(ply)
-	return false
+function MapVotePools.GetVotePower(ply)
+	return 1
 end
 
 if SERVER then
