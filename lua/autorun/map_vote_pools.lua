@@ -85,6 +85,11 @@ MapVotePools.CVARS = MapVotePools.CVARS or {
 		"256",
 		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
 	),
+	ui_avatar_alpha = CreateConVar(
+		"sv_mvp_ui_avatar_alpha",
+		"156",
+		{FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}
+	),
 
 	rtv_player_count = CreateConVar(
 		"sv_mvp_rtv_player_count",

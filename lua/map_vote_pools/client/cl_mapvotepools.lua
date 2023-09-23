@@ -13,10 +13,10 @@ MapVotePools.Look = {
 	playercount_text_size = 24,
 	playercount_vertical_pos = 8,
 
+		avatar_alpha = 153,
 	avatar_size = 32,
 	avatar_outline_size = 2,
 	avatar_move_duration = 0.3,
-	avatar_alpha = 153,
 
 	ballot_header_button_width = 31,
 
@@ -277,7 +277,7 @@ function PANEL:AddVoter(voter)
 	avatar_container.Player = voter
 	avatar_container:SetTooltip(voter:Nick())
 	avatar_container:SetMouseInputEnabled(true)
-	avatar_container:SetAlpha(look.avatar_alpha)
+	avatar_container:SetAlpha(GetConVar("sv_mvp_ui_avatar_alpha"):GetInt())
 	avatar_container:SetSize(look.avatar_size, look.avatar_size)
 	-- function avatar_container:Paint(w, h)
 		-- draw.RoundedBox(4, 0, 0, w, h, Color(255, 0, 0, 80))
@@ -303,7 +303,7 @@ function PANEL:AddVoter(voter)
 	local compound = look.avatar_size + (look.avatar_outline_size * 2)
 	avatar_container:SetSize(compound, compound)
 	avatar_image:SetPos(look.avatar_outline_size, look.avatar_outline_size)
-	avatar_image:SetAlpha(look.avatar_alpha)
+	avatar_image:SetAlpha(GetConVar("sv_mvp_ui_avatar_alpha"):GetInt())
 	if MapVotePools.GetVotePower(voter) > 1 then
 		local power_img = vgui.Create("DImage", avatar_image)	-- Add image to Frame
 		local space = look.avatar_size / 2

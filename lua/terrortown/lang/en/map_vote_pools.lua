@@ -93,6 +93,8 @@ L["label_ttt2_sv_mvp_ui_icon_tile_columns"] = "Icon Tile Columns"
 L["help_ttt2_sv_mvp_ui_icon_tile_columns"] = "How many columns of maps to show to the user at once.\nAffects whether or not you may need to scroll by default."
 L["label_ttt2_sv_mvp_ui_icon_scale"] = "Icon Scale"
 L["help_ttt2_sv_mvp_ui_icon_scale"] = "The resolution of the map thumbnails to draw at."
+L["label_ttt2_sv_mvp_ui_avatar_alpha"] = "Avatar Alpha"
+L["help_ttt2_sv_mvp_ui_avatar_alpha"] = "The transparency of the users's avatars on the map thumbnails."
 -- L["label_ttt2_sv_mvp_"] = ""
 -- L["help_ttt2_sv_mvp_"] = ""
 

@@ -193,6 +193,16 @@ function CLGAMEMODESUBMENU:Populate(parent)
 		max = 512,
 		decimal = 0,
 	})
+	interface:MakeHelp({
+		label = "help_ttt2_sv_mvp_ui_avatar_alpha",
+	})
+	interface:MakeSlider({
+		label = "label_ttt2_sv_mvp_ui_avatar_alpha",
+		serverConvar = "sv_mvp_ui_avatar_alpha",
+		min = 0,
+		max = 255,
+		decimal = 0,
+	})
 
 
 
