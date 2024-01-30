@@ -58,14 +58,11 @@ function MapVotePools.Nominate.CanClientNominateMap(ply, desired_map)
 	local maps = MapVotePools.PlainMapList()
 	local hits = {}
 	for _, map_name in ipairs(maps) do
-		--[[
-		-- we can't break early because some maps are substrings of others :(
+		-- this is the only way to nominate something
 		if desired_map == map_name then
-			hit_count = 1
 			hits = {map_name}
 			break
 		end
-		]]
 		if string.find(map_name, desired_map, 0, true) then
 			table.insert(hits, map_name)
 		end
